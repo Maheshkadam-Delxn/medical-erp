@@ -5,7 +5,7 @@ import RecentActivity from '@/components/dashboard/RecentActivity';
 
 export default function AdminDashboard() {
   return (
-    <div className="space-y-6 ml-62">
+    <div className="space-y-6 ">
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 

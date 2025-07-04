@@ -108,16 +108,7 @@ export default function ModernSupplierDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 ml-63">
-      {/* Modern Sidebar */}
-      
-
-      
-
-      {/* Main Content */}
-      <div className="">
-       
-
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 space-y-4">
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, index) => (
@@ -338,7 +329,7 @@ export default function ModernSupplierDashboard() {
             </div>
           </div>
         </div>
-      </div>
+      
     </div>
   );
 }

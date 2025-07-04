@@ -1,7 +1,7 @@
 "use client"
 export default function ChemistDashboard() {
   return (
-    <div className="space-y-6 ml-63">
+    <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {/* Appointments Widget */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">

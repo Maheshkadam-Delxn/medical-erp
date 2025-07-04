@@ -10,7 +10,7 @@ export default function Header({ role, onMenuClick }) {
   ]);
 
   return (
-    <header className="sticky top-0 z-20 bg-green-600 text-white shadow-md h-16 ml-64">
+    <header className="sticky top-0 z-20 bg-green-600 text-white shadow-md h-16 ">
       <div className="flex items-center justify-between h-full px-4">
         {/* Menu Button */}
         <button 
