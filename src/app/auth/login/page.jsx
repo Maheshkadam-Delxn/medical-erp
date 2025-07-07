@@ -20,7 +20,8 @@ export default function MultiUserLogin() {
   // User type configurations
   const userTypes = {
     chemist: {
-      title: "Chemist Portal",
+      title:"MadiEase",
+      name: "Chemist Portal",
       subtitle: "Manage your pharmacy inventory and sales with precision",
       icon: (
         <svg
@@ -39,7 +40,8 @@ export default function MultiUserLogin() {
       ),
     },
     supplier: {
-      title: "Supplier Portal",
+      title:"MadiEase",
+      name: "Supplier Portal",
       subtitle: "Streamline orders and deliveries efficiently",
       icon: (
         <svg
@@ -58,7 +60,8 @@ export default function MultiUserLogin() {
       ),
     },
     superadmin: {
-      title: "Super Admin",
+      title:"MadiEase",
+      name: "Super Admin",
       subtitle: "Complete system administration and control",
       icon: (
         <svg
@@ -231,7 +234,7 @@ export default function MultiUserLogin() {
                       {type.icon}
                     </div>
                     <span className="text-xs font-medium text-center leading-tight">
-                      {type.title}
+                      {type.name}
                     </span>
                   </button>
                 ))}
@@ -492,7 +495,7 @@ export default function MultiUserLogin() {
             <h2 className="text-2xl lg:text-3xl font-bold mb-3">
               Welcome to {userTypes[selectedUserType].title}
             </h2>
-            <p className="text-base lg:text-lg opacity-90 mb-8">
+            <p className="text-base lg:text-4sm opacity-90 mb-8">
               {userTypes[selectedUserType].subtitle}
             </p>
 

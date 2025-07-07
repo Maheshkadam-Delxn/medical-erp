@@ -125,10 +125,10 @@ export default function HeroSection() {
         <div className="lg:w-1/2 flex justify-center">
           <div className="relative group">
             {/* Floating background elements */}
-            <div className="absolute -inset-4 bg-gradient-to-r from-green-600/20 via-blue-600/20 to-purple-600/20 rounded-3xl blur-2xl opacity-60 group-hover:opacity-80 transition-opacity duration-700 animate-pulse"></div>
+            <div className="absolute -inset-4 bg-gradient-to-r from-green-600/20 via-blue-600/20 to-purple-600/20 rounded-3xl blur-xl opacity-60 group-hover:opacity-80 transition-opacity duration-700 animate-pulse"></div>
     
             {/* Main image container */}
-            <div className="relative w-80 h-80 md:w-96 md:h-96 lg:w-[550px] lg:h-[450px] rounded-3xl overflow-hidden shadow-2xl group-hover:shadow-3xl transition-all duration-500 transform group-hover:scale-102">
+            <div className="relative w-80 h-80 md:w-96 md:h-96 lg:w-[550px] lg:h-[450px] rounded-3xl overflow-hidden shadow-1xl group-hover:shadow-1xl transition-all duration-500 transform group-hover:scale-101">
               
               {/* Image */}
               <Image

@@ -30,7 +30,7 @@ export default function Navbar() {
             </Link>
             
             <div className="flex space-x-4">
-              <Link href="/auth/login" className="px-4 py-2 rounded-md text-gray-600 hover:bg-green-200">
+              <Link href="/auth/login" className="px-2 py-2 rounded-md text-gray-600 hover:bg-green-200">
                 Sign In
               </Link>
               <Link href="/auth/register" className="px-4 py-2 rounded-md bg-green-600 text-white hover:bg-green-700">

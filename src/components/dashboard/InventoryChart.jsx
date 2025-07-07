@@ -57,7 +57,7 @@ export default function InventoryChart() {
   }, []);
 
   return (
-    <div className="h-80">
+    <div className="h-80 text-black">
       {mounted && (
         <Chart
           options={chartOptions}

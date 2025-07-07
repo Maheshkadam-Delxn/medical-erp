@@ -28,7 +28,7 @@ export default function RecentActivity() {
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 text-black">
       {activities.map((activity) => (
         <div key={activity.id} className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors">
           <div className="mt-1 p-2 rounded-full bg-gray-100">
