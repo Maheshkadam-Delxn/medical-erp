@@ -225,12 +225,13 @@ const statusIcons = {
 };
 
 export default function OrdersPage() {
+  const [orders, setOrders] = useState(mockOrders);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
 
-  const filteredOrders = mockOrders.filter(order => {
+  const filteredOrders = orders.filter(order => {
     const matchesSearch = order.orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.chemistName.toLowerCase().includes(searchTerm.toLowerCase());
     
@@ -254,6 +255,19 @@ export default function OrdersPage() {
       case 'Paid': return 'green';
       case 'Failed': return 'red';
       default: return 'gray';
+    }
+  };
+
+  const updateOrderStatus = (orderId, field, value) => {
+    setOrders(prevOrders => 
+      prevOrders.map(order => 
+        order.orderId === orderId ? { ...order, [field]: value } : order
+      )
+    );
+    
+    // Also update the selected order if it's the one being modified
+    if (selectedOrder && selectedOrder.orderId === orderId) {
+      setSelectedOrder(prev => ({ ...prev, [field]: value }));
     }
   };
 
@@ -306,7 +320,7 @@ export default function OrdersPage() {
           <CardContent className="flex items-center justify-between p-5">
             <div>
               <p className="text-sm font-medium text-gray-500">Total Orders</p>
-              <p className="text-2xl font-bold mt-1">{mockOrders.length}</p>
+              <p className="text-2xl font-bold mt-1">{orders.length}</p>
             </div>
             <div className="rounded-lg bg-indigo-100 p-3">
               <Truck className="w-6 h-6 text-indigo-600" />
@@ -318,7 +332,7 @@ export default function OrdersPage() {
             <div>
               <p className="text-sm font-medium text-gray-500">Pending</p>
               <p className="text-2xl font-bold mt-1">
-                {mockOrders.filter(o => o.deliveryStatus === 'Pending').length}
+                {orders.filter(o => o.deliveryStatus === 'Pending').length}
               </p>
             </div>
             <div className="rounded-lg bg-yellow-100 p-3">
@@ -331,7 +345,7 @@ export default function OrdersPage() {
             <div>
               <p className="text-sm font-medium text-gray-500">Dispatched</p>
               <p className="text-2xl font-bold mt-1">
-                {mockOrders.filter(o => o.deliveryStatus === 'Dispatched').length}
+                {orders.filter(o => o.deliveryStatus === 'Dispatched').length}
               </p>
             </div>
             <div className="rounded-lg bg-blue-100 p-3">
@@ -344,7 +358,7 @@ export default function OrdersPage() {
             <div>
               <p className="text-sm font-medium text-gray-500">Delivered</p>
               <p className="text-2xl font-bold mt-1">
-                {mockOrders.filter(o => o.deliveryStatus === 'Delivered').length}
+                {orders.filter(o => o.deliveryStatus === 'Delivered').length}
               </p>
             </div>
             <div className="rounded-lg bg-green-100 p-3">
@@ -471,18 +485,28 @@ export default function OrdersPage() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Payment Status:</span>
-                      <Badge variant={getStatusColor(selectedOrder.paymentStatus)} className="capitalize">
-                        {selectedOrder.paymentStatus}
-                      </Badge>
+                      <Select 
+                        value={selectedOrder.paymentStatus}
+                        onValueChange={(value) => updateOrderStatus(selectedOrder.orderId, 'paymentStatus', value)}
+                        className="w-32"
+                      >
+                        <option value="Paid">Paid</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Failed">Failed</option>
+                      </Select>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Delivery Status:</span>
-                      <Badge variant={getStatusColor(selectedOrder.deliveryStatus)} className="capitalize">
-                        <div className="flex items-center gap-1.5">
-                          {statusIcons[selectedOrder.deliveryStatus]}
-                          {selectedOrder.deliveryStatus}
-                        </div>
-                      </Badge>
+                      <Select 
+                        value={selectedOrder.deliveryStatus}
+                        onValueChange={(value) => updateOrderStatus(selectedOrder.orderId, 'deliveryStatus', value)}
+                        className="w-32"
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="Dispatched">Dispatched</option>
+                        <option value="Delivered">Delivered</option>
+                        <option value="Cancelled">Cancelled</option>
+                      </Select>
                     </div>
                   </div>
                 </div>

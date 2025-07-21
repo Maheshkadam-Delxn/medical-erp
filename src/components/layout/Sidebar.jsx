@@ -143,6 +143,7 @@ const roleConfig = {
     navItems: [
       { title: "Dashboard", icon: LayoutDashboard, path: "/chemist/dashboard" },
       {title: "Purches Order", icon: ClipboardList, path: "/chemist/purchaseorder"},
+      {title: "Browse Product", icon: ClipboardList, path: "/chemist/browse_product"},
       { title: "Sales Report", icon: Calendar, path: "/chemist/salesreport", badge: "8" },
       { title: "Prescriptions", icon: ClipboardCheck, path: "/chemist/prescriptions", badge: "new" },
       { title: "Inventory", icon: Package, path: "/chemist/inventory" },

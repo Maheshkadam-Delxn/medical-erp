@@ -103,7 +103,9 @@
 // }
 
 // components/layout/Header.jsx
+
 "use client";
+import { useRouter } from 'next/navigation';
 import { useState, useEffect } from "react";
 import {
   Menu,
@@ -163,7 +165,14 @@ export default function Header({ role = "admin", onMenuClick, isCollapsed }) {
       type: "system",
     },
   ]);
+const router = useRouter();
 
+  const handleClickprofile = () => {
+    router.push('profile'); // adjust path if your profile page is elsewhere
+  };
+   const handleClickaccount = () => {
+    router.push('account'); // adjust path if your profile page is elsewhere
+  };
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -394,11 +403,13 @@ export default function Header({ role = "admin", onMenuClick, isCollapsed }) {
                 </div>
 
                 <div className="p-2">
-                  <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md flex items-center gap-2">
+                  <button onClick={handleClickprofile}
+                  className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md flex items-center gap-2">
                     <User className="h-4 w-4" />
                     Profile Settings
                   </button>
-                  <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md flex items-center gap-2">
+                  <button onClick={handleClickaccount}
+                  className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md flex items-center gap-2">
                     <Settings className="h-4 w-4" />
                     Account Settings
                   </button>
