@@ -140,7 +140,7 @@ export default function Layout({ children }) {
         <footer className="bg-white/80 backdrop-blur-sm border-t border-gray-200/50 px-6 py-4">
           <div className="flex flex-col sm:flex-row items-center justify-between text-sm text-gray-600">
             <div className="flex items-center gap-4">
-              <span>© 2024 MediEase. All rights reserved.</span>
+              <span>© 2025 MediEase. All rights reserved.</span>
               <span className="hidden sm:inline">•</span>
               <span className="hidden sm:inline">Version 2.0.1</span>
             </div>

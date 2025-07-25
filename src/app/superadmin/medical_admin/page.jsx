@@ -1,126 +1,126 @@
-'use client';
-
-import React, { useState } from 'react';
-import { Eye, Download, X, User, Users, MapPin, Phone, Mail, Calendar, FileText, CreditCard, Building, Shield, CheckCircle, Plus, UserCheck, Clock } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+"use client";
+import { useState, useEffect } from "react";
+import {
+  Eye,
+  Download,
+  X,
+  User,
+  Users,
+  UserX,
+  MapPin,
+  Phone,
+  Mail,
+  Calendar,
+  FileText,
+  CreditCard,
+  Building,
+  CheckCircle,
+  Plus,
+  UserCheck,
+  Clock,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function MedicalAdminsPage() {
-  const [admins, setAdmins] = useState([
-    {
-      id: 1,
-      name: 'Dr. Rajesh Kumar',
-      email: 'rajesh.kumar@hospital.com',
-      phone: '9876543210',
-      clinic: 'City Hospital',
-      address: '45, Ring Road, Delhi',
-      licenseNo: 'LICMED123',
-      panNo: 'ABCDE1234F',
-      gstNo: '07ABCDE1234F1Z1',
-      expiry: '2025-11-20',
-      licenseFile: '/med-license1.pdf',
-      specialization: 'Cardiology',
-      experience: '15 years',
-      status: 'Active',
-      joinDate: '2020-01-15',
-      lastLogin: '2025-07-16 09:30 AM',
-      rejectionReason: ''
-    },
-    {
-      id: 2,
-      name: 'Dr. Meena Sharma',
-      email: 'meena.sharma@clinic.com',
-      phone: '9765432109',
-      clinic: 'Sharma Clinic',
-      address: '89, Camp Area, Pune',
-      licenseNo: 'LICMED456',
-      panNo: 'FGHIJ5678K',
-      gstNo: '27FGHIJ5678K1Z2',
-      expiry: '2026-04-05',
-      licenseFile: '/med-license2.pdf',
-      specialization: 'Pediatrics',
-      experience: '12 years',
-      status: 'Pending',
-      joinDate: '2021-03-10',
-      lastLogin: '2025-07-16 11:45 AM',
-      rejectionReason: ''
-    },
-    {
-      id: 3,
-      name: 'Dr. Amit Patel',
-      email: 'amit.patel@healthcare.com',
-      phone: '9654321098',
-      clinic: 'Patel Diagnostics',
-      address: '32, MG Road, Mumbai',
-      licenseNo: 'LICMED789',
-      panNo: 'KLMNO5678P',
-      gstNo: '27KLMNO5678P1Z3',
-      expiry: '2025-12-15',
-      licenseFile: '/med-license3.pdf',
-      specialization: 'Radiology',
-      experience: '8 years',
-      status: 'Rejected',
-      joinDate: '2022-02-20',
-      lastLogin: '2025-06-10 10:15 AM',
-      rejectionReason: 'License verification failed'
-    },
-  ]);
-
+  const [admins, setAdmins] = useState([]); // Will store combined chemists and suppliers
   const [selectedAdmin, setSelectedAdmin] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState("all");
   const [showRejectionDialog, setShowRejectionDialog] = useState(false);
-  const [rejectionReason, setRejectionReason] = useState('');
-  const [adminToReject, setAdminToReject] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [adminToReject, setAdminToReject] = useState(null); // Stores the full admin object
   const [showApprovalSuccess, setShowApprovalSuccess] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState("");
+
+  // Function to fetch data from backend
+  const fetchRegistrations = async () => {
+    setLoading(true);
+    setFetchError("");
+    try {
+      const chemistsRes = await fetch("/api/chemist/register"); // GET only chemists
+      const chemistsData = await chemistsRes.json();
+      if (!chemistsRes.ok)
+        throw new Error(chemistsData.error || "Failed to fetch chemists");
+
+      const allUsers = [
+        ...(chemistsData.data || []).map((chem) => ({
+          ...chem,
+          userType: "Chemist",
+          status: chem.isApproved
+            ? "Active"
+            : chem.rejectionReason
+            ? "Rejected"
+            : "Pending",
+          licenseNumber: chem.licenseNumber,
+          licenseExpiry: chem.licenseExpiry,
+          licenseFileUrl: chem.licenseFileUrl,
+          joinDate: new Date(chem.createdAt).toLocaleDateString(),
+        })),
+      ];
+      setAdmins(allUsers);
+    } catch (error) {
+      console.error("Error fetching registrations:", error);
+      setFetchError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRegistrations();
+  }, []);
 
   // Filter admins based on selected filter
-  const filteredAdmins = filter === 'all' 
-    ? admins 
-    : admins.filter(admin => admin.status.toLowerCase() === filter.toLowerCase());
+  const filteredAdmins =
+    filter === "all"
+      ? admins
+      : admins.filter(
+          (admin) => admin.status.toLowerCase() === filter.toLowerCase()
+        );
 
   // Calculate stats based on actual data
   const stats = [
-    { 
-      label: 'Total Admins', 
-      value: admins.length, 
-      icon: Users, 
-      color: 'from-green-500 to-emerald-600',
-      filter: 'all'
+    {
+      label: "Total Chemists", // Changed from Total Users
+      value: admins.length,
+      icon: Users,
+      color: "from-green-500 to-emerald-600",
+      filter: "all",
     },
-    { 
-      label: 'Active Admins', 
-      value: admins.filter(a => a.status === 'Active').length, 
-      icon: UserCheck, 
-      color: 'from-green-600 to-green-700',
-      filter: 'active'
+    {
+      label: "Active Chemists", // Changed from Active Users
+      value: admins.filter((a) => a.status === "Active").length,
+      icon: UserCheck,
+      color: "from-green-600 to-green-700",
+      filter: "active",
     },
-    { 
-      label: 'Pending Approvals', 
-      value: admins.filter(a => a.status === 'Pending').length, 
-      icon: Clock, 
-      color: 'from-amber-500 to-orange-600',
-      filter: 'pending'
+    {
+      label: "Pending Chemist Approvals", // Changed from Pending Approvals
+      value: admins.filter((a) => a.status === "Pending").length,
+      icon: Clock,
+      color: "from-amber-500 to-orange-600",
+      filter: "pending",
     },
-    { 
-      label: 'Rejected Accounts', 
-      value: admins.filter(a => a.status === 'Rejected').length, 
-      icon: Shield, 
-      color: 'from-red-500 to-red-600',
-      filter: 'rejected'
+    {
+      label: "Rejected Chemist Accounts", // Changed from Rejected Accounts
+      value: admins.filter((a) => a.status === "Rejected").length,
+      icon: UserX,
+      color: "from-red-500 to-red-600",
+      filter: "rejected",
     },
   ];
 
   // Animation variants
   const backdropVariants = {
     hidden: { opacity: 0 },
-    visible: { opacity: 1 }
+    visible: { opacity: 1 },
   };
-
   const modalVariants = {
-    hidden: { 
+    hidden: {
       opacity: 0,
       scale: 0.9,
-      y: 20
+      y: 20,
     },
     visible: {
       opacity: 1,
@@ -129,97 +129,146 @@ export default function MedicalAdminsPage() {
       transition: {
         type: "spring",
         damping: 25,
-        stiffness: 300
-      }
+        stiffness: 300,
+      },
     },
     exit: {
       opacity: 0,
       scale: 0.9,
       y: 20,
       transition: {
-        duration: 0.2
-      }
-    }
+        duration: 0.2,
+      },
+    },
   };
-
   const approvalVariants = {
     hidden: { opacity: 0, scale: 0.8 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       scale: 1,
       transition: {
         type: "spring",
         stiffness: 300,
-        damping: 25
-      }
+        damping: 25,
+      },
     },
-    exit: { opacity: 0, scale: 0.8 }
+    exit: { opacity: 0, scale: 0.8 },
   };
 
   const viewAdminDetails = (admin) => {
     setSelectedAdmin(admin);
     setIsModalOpen(true);
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
   };
 
   const downloadLicense = (fileUrl) => {
-    const link = document.createElement('a');
-    link.href = fileUrl;
-    link.download = fileUrl.split('/').pop();
-    link.click();
+    if (fileUrl) {
+      const link = document.createElement("a");
+      link.href = fileUrl;
+      link.download = fileUrl.split("/").pop();
+      link.click();
+    }
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedAdmin(null);
-    document.body.style.overflow = 'unset';
+    document.body.style.overflow = "unset";
   };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Active': return 'bg-green-100 text-green-800';
-      case 'Inactive': return 'bg-red-100 text-red-800';
-      case 'Pending': return 'bg-yellow-100 text-yellow-800';
-      case 'Rejected': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "Active":
+        return "bg-green-100 text-green-800";
+      case "Pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "Rejected":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const isLicenseExpiring = (expiry) => {
+    if (!expiry) return false;
     const expiryDate = new Date(expiry);
     const today = new Date();
-    const diffTime = expiryDate - today;
+    const diffTime = expiryDate.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays <= 30;
+    return diffDays <= 30 && diffDays >= 0; // Expiring within 30 days, but not already expired
   };
 
-  const handleApprove = (adminId) => {
-    const updatedAdmins = admins.map(a => 
-      a.id === adminId ? {...a, status: 'Active'} : a
-    );
-    setAdmins(updatedAdmins);
-    setShowApprovalSuccess(true);
-    setTimeout(() => setShowApprovalSuccess(false), 2000);
+  const handleApprove = async (admin) => {
+    setLoading(true);
+    try {
+      const apiUrl = `/api/${admin.userType.toLowerCase()}/${
+        admin._id
+      }/approve-reject`;
+      const response = await fetch(apiUrl, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ isApproved: true }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to approve user");
+      }
+      setShowApprovalSuccess(true);
+      setTimeout(() => setShowApprovalSuccess(false), 2000);
+      fetchRegistrations(); // Re-fetch data to update UI
+      closeModal(); // Close modal after action
+    } catch (error) {
+      console.error("Approval error:", error);
+      setFetchError(error.message); // Display error in main component
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleRejectClick = (adminId) => {
-    setAdminToReject(adminId);
+  const handleRejectClick = (admin) => {
+    setAdminToReject(admin); // Store the full admin object
     setShowRejectionDialog(true);
   };
 
-  const confirmRejection = () => {
-    const updatedAdmins = admins.map(a => 
-      a.id === adminToReject ? {...a, status: 'Rejected', rejectionReason} : a
-    );
-    setAdmins(updatedAdmins);
-    setShowRejectionDialog(false);
-    setRejectionReason('');
-    setAdminToReject(null);
+  const confirmRejection = async () => {
+    if (!adminToReject || !rejectionReason.trim()) return;
+    setLoading(true);
+    try {
+      const apiUrl = `/api/${adminToReject.userType.toLowerCase()}/${
+        adminToReject._id
+      }/approve-reject`;
+      const response = await fetch(apiUrl, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          isApproved: false,
+          rejectionReason: rejectionReason.trim(),
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to reject user");
+      }
+      setShowRejectionDialog(false);
+      setRejectionReason("");
+      setAdminToReject(null);
+      fetchRegistrations(); // Re-fetch data to update UI
+      closeModal(); // Close modal after action
+    } catch (error) {
+      console.error("Rejection error:", error);
+      setFetchError(error.message); // Display error in main component
+    } finally {
+      setLoading(false);
+    }
   };
 
   const cancelRejection = () => {
     setShowRejectionDialog(false);
-    setRejectionReason('');
+    setRejectionReason("");
     setAdminToReject(null);
   };
 
@@ -228,13 +277,15 @@ export default function MedicalAdminsPage() {
       {/* Header with Add Admin Button */}
       <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-green-500 flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
         <div>
-          <h1 className="text-3xl font-bold text-green-800">Medical Admins</h1>
-          <p className="text-green-600 text-sm">Manage healthcare professionals and their credentials</p>
+          <h1 className="text-3xl font-bold text-green-800">User Management</h1>{" "}
+          {/* Changed title */}
+          <p className="text-green-600 text-sm">
+            Manage healthcare professionals and suppliers
+          </p>{" "}
+          {/* Updated description */}
         </div>
         <div className="flex gap-4">
-          <button className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-base font-semibold">
-            <Plus size={20} /> Add Admin
-          </button>
+          {/* Removed Add Admin button as it's not directly related to this page's purpose */}
         </div>
       </div>
 
@@ -243,137 +294,180 @@ export default function MedicalAdminsPage() {
         {stats.map((stat, i) => {
           const Icon = stat.icon;
           return (
-            <motion.div 
-              key={i} 
+            <motion.div
+              key={i}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setFilter(stat.filter)}
               className={`bg-white rounded-2xl shadow-lg p-6 transform transition-transform duration-200 cursor-pointer border-l-4 ${
-                filter === stat.filter ? 'border-green-500' : 'border-transparent'
+                filter === stat.filter
+                  ? "border-green-500"
+                  : "border-transparent"
               }`}
             >
-              <div className={`p-3 rounded-xl bg-gradient-to-r ${stat.color} w-fit mb-4`}>
+              <div
+                className={`p-3 rounded-xl bg-gradient-to-r ${stat.color} w-fit mb-4`}
+              >
                 <Icon className="h-6 w-6 text-white" />
               </div>
-              <p className="text-sm font-medium text-gray-600 mb-1">{stat.label}</p>
+              <p className="text-sm font-medium text-gray-600 mb-1">
+                {stat.label}
+              </p>
               <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
             </motion.div>
           );
         })}
       </div>
-      
+
       {/* Main Table */}
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden relative">
         <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4">
           <h3 className="text-xl font-bold text-white flex items-center gap-2">
             <User className="h-5 w-5" />
-            Medical Admin List {filter !== 'all' && `(${filter.charAt(0).toUpperCase() + filter.slice(1)})`}
+            Chemist List{" "}
+            {filter !== "all" &&
+              `(${filter.charAt(0).toUpperCase() + filter.slice(1)})`}
           </h3>
         </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-green-50">
-              <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-green-800 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-green-800 uppercase tracking-wider">Specialization</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-green-800 uppercase tracking-wider">Contact No</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-green-800 uppercase tracking-wider">Clinic/Hospital</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-green-800 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-center text-xs font-semibold text-green-800 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredAdmins.map((admin) => (
-                <tr key={admin.id} className="hover:bg-green-50 transition-colors duration-150">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center">
-                        <User className="h-5 w-5 text-white" />
-                      </div>
-                      <div>
-                        <div className="font-medium text-gray-900">{admin.name}</div>
-                        <div className="text-sm text-gray-500">{admin.email}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm text-gray-700">{admin.specialization}</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm text-gray-700">{admin.phone}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <Building className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm text-gray-700">{admin.clinic}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-col gap-1">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium justify-center ${getStatusColor(admin.status)}`}>
-                        {admin.status}
-                      </span>
-                      {isLicenseExpiring(admin.expiry) && admin.status !== 'Rejected' && (
-                        <span className="text-xs text-red-600 font-medium">Expires Soon</span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex justify-center gap-2">
-                      {admin.status === 'Pending' ? (
-                        <>
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleApprove(admin.id)}
-                            className="px-3 py-1 bg-green-100 text-green-800 hover:bg-green-200 rounded-lg text-sm font-medium"
-                          >
-                            Approve
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleRejectClick(admin.id)}
-                            className="px-3 py-1 bg-red-100 text-red-800 hover:bg-red-200 rounded-lg text-sm font-medium"
-                          >
-                            Reject
-                          </motion.button>
-                        </>
-                      ) : (
-                        <>
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => viewAdminDetails(admin)}
-                            className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded-lg"
-                            title="View Details"
-                          >
-                            <Eye size={18} />
-                          </motion.button>
-                          {admin.status !== 'Rejected' && (
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => downloadLicense(admin.licenseFile)}
-                              className="p-2 text-green-600 hover:text-green-800 hover:bg-green-100 rounded-lg"
-                              title="Download License"
-                            >
-                              
-                            </motion.button>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </td>
+        {loading ? (
+          <div className="p-6 text-center text-gray-600">Loading users...</div>
+        ) : fetchError ? (
+          <div className="p-6 text-center text-red-600">
+            Error: {fetchError}
+          </div>
+        ) : filteredAdmins.length === 0 ? (
+          <div className="p-6 text-center text-gray-600">
+            No users found for this filter.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-green-50">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-green-800 uppercase tracking-wider">
+                    Name
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-green-800 uppercase tracking-wider">
+                    Type
+                  </th>{" "}
+                  {/* Added User Type */}
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-green-800 uppercase tracking-wider">
+                    Contact No
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-green-800 uppercase tracking-wider">
+                    Organization
+                  </th>{" "}
+                  {/* Changed from Clinic/Hospital */}
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-green-800 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-green-800 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {filteredAdmins.map((admin) => (
+                  <tr
+                    key={admin._id}
+                    className="hover:bg-green-50 transition-colors duration-150"
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center">
+                          <User className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900">
+                            {admin.name || admin.contactPerson}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {admin.email}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-sm text-gray-700">
+                        {admin.userType}
+                      </span>{" "}
+                      {/* Display User Type */}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-gray-400" />
+                        <span className="text-sm text-gray-700">
+                          {admin.phone}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <Building className="h-4 w-4 text-gray-400" />
+                        <span className="text-sm text-gray-700">
+                          {admin.storeName || admin.companyName}
+                        </span>{" "}
+                        {/* Display organization */}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col gap-1">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium justify-center ${getStatusColor(
+                            admin.status
+                          )}`}
+                        >
+                          {admin.status}
+                        </span>
+                        {isLicenseExpiring(admin.licenseExpiry) &&
+                          admin.status !== "Rejected" && (
+                            <span className="text-xs text-red-600 font-medium">
+                              Expires Soon
+                            </span>
+                          )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex gap-3 justify-center">
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => viewAdminDetails(admin)}
+                          className="flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-sm font-medium"
+                          title="View Details"
+                        >
+                          <Eye size={16} />
+                        </motion.button>
+                        {admin.status === "Pending" && (
+                          <>
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => handleApprove(admin)}
+                              className="flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg text-sm font-medium"
+                              title="Approve"
+                            >
+                              <CheckCircle size={16} />
+                            </motion.button>
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => handleRejectClick(admin)}
+                              className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-sm font-medium"
+                              title="Reject"
+                            >
+                              <UserX size={16} />
+                            </motion.button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Admin Details Modal */}
         <AnimatePresence>
@@ -387,7 +481,6 @@ export default function MedicalAdminsPage() {
                 className="absolute inset-0 bg-black/50 backdrop-blur-sm"
                 onClick={closeModal}
               ></motion.div>
-              
               <motion.div
                 initial="hidden"
                 animate="visible"
@@ -398,61 +491,76 @@ export default function MedicalAdminsPage() {
                 <div className="sticky top-0 bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4 flex justify-between items-center z-10">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                      <User className="h-5 w-5 text-white" />
+                      <User className="h-5 w-5" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-white">Medical Admin Details</h3>
-                      <p className="text-green-100 text-sm">{selectedAdmin.name}</p>
+                      <h3 className="text-xl font-bold text-white">
+                        {selectedAdmin.userType} Details
+                      </h3>{" "}
+                      {/* Dynamic title */}
+                      <p className="text-green-100 text-sm">
+                        {selectedAdmin.name || selectedAdmin.contactPerson}
+                      </p>
                     </div>
                   </div>
-                  <button 
+                  <button
                     onClick={closeModal}
                     className="text-white hover:text-gray-200 transition-colors p-2 hover:bg-white/10 rounded-lg"
                   >
                     <X size={24} />
                   </button>
                 </div>
-                
                 <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
                     className={`mb-6 p-4 rounded-xl border-l-4 ${
-                      selectedAdmin.status === 'Active' ? 'bg-green-50 border-green-500' : 
-                      selectedAdmin.status === 'Pending' ? 'bg-yellow-50 border-yellow-500' :
-                      'bg-red-50 border-red-500'
+                      selectedAdmin.status === "Active"
+                        ? "bg-green-50 border-green-500"
+                        : selectedAdmin.status === "Pending"
+                        ? "bg-yellow-50 border-yellow-500"
+                        : "bg-red-50 border-red-500"
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <CheckCircle className={`h-5 w-5 ${
-                        selectedAdmin.status === 'Active' ? 'text-green-600' : 
-                        selectedAdmin.status === 'Pending' ? 'text-yellow-600' :
-                        'text-red-600'
-                      }`} />
-                      <span className={`font-medium ${
-                        selectedAdmin.status === 'Active' ? 'text-green-800' : 
-                        selectedAdmin.status === 'Pending' ? 'text-yellow-800' :
-                        'text-red-800'
-                      }`}>
+                      <CheckCircle
+                        className={`h-5 w-5 ${
+                          selectedAdmin.status === "Active"
+                            ? "text-green-600"
+                            : selectedAdmin.status === "Pending"
+                            ? "text-yellow-600"
+                            : "text-red-600"
+                        }`}
+                      />
+                      <span
+                        className={`font-medium ${
+                          selectedAdmin.status === "Active"
+                            ? "text-green-800"
+                            : selectedAdmin.status === "Pending"
+                            ? "text-yellow-800"
+                            : "text-red-800"
+                        }`}
+                      >
                         Account Status: {selectedAdmin.status}
                       </span>
                     </div>
-                    {selectedAdmin.status === 'Rejected' && selectedAdmin.rejectionReason && (
-                      <div className="mt-2">
-                        <p className="text-sm font-medium text-red-800">Rejection Reason:</p>
-                        <p className="text-sm text-red-700">{selectedAdmin.rejectionReason}</p>
-                      </div>
-                    )}
-                    <p className="text-sm text-gray-600 mt-1">
-                      Last login: {selectedAdmin.lastLogin}
-                    </p>
+                    {selectedAdmin.status === "Rejected" &&
+                      selectedAdmin.rejectionReason && (
+                        <div className="mt-2">
+                          <p className="text-sm font-medium text-red-800">
+                            Rejection Reason:
+                          </p>
+                          <p className="text-sm text-red-700">
+                            {selectedAdmin.rejectionReason}
+                          </p>
+                        </div>
+                      )}
                   </motion.div>
-
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* Left Column */}
                     <div className="space-y-6">
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
@@ -466,26 +574,46 @@ export default function MedicalAdminsPage() {
                           <div className="flex items-start gap-3">
                             <User className="h-4 w-4 text-blue-600 mt-1" />
                             <div>
-                              <p className="font-medium text-gray-900">{selectedAdmin.name}</p>
-                              <p className="text-sm text-gray-600">{selectedAdmin.specialization}</p>
+                              <p className="font-medium text-gray-900">
+                                {selectedAdmin.name ||
+                                  selectedAdmin.contactPerson}
+                              </p>
+                              {selectedAdmin.userType === "Chemist" &&
+                                selectedAdmin.shoptype && (
+                                  <p className="text-sm text-gray-600">
+                                    {selectedAdmin.shoptype}
+                                  </p>
+                                )}
+                              {selectedAdmin.userType === "Supplier" &&
+                                selectedAdmin.supplierType && (
+                                  <p className="text-sm text-gray-600">
+                                    {selectedAdmin.supplierType}
+                                  </p>
+                                )}
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
                             <Mail className="h-4 w-4 text-blue-600" />
-                            <p className="text-gray-700">{selectedAdmin.email}</p>
+                            <p className="text-gray-700">
+                              {selectedAdmin.email}
+                            </p>
                           </div>
                           <div className="flex items-center gap-3">
                             <Phone className="h-4 w-4 text-blue-600" />
-                            <p className="text-gray-700">{selectedAdmin.phone}</p>
+                            <p className="text-gray-700">
+                              {selectedAdmin.phone}
+                            </p>
                           </div>
                           <div className="flex items-start gap-3">
                             <MapPin className="h-4 w-4 text-blue-600 mt-1" />
-                            <p className="text-gray-700">{selectedAdmin.address}</p>
+                            <p className="text-gray-700">
+                              {selectedAdmin.address}, {selectedAdmin.city},{" "}
+                              {selectedAdmin.state} - {selectedAdmin.pincode}
+                            </p>
                           </div>
                         </div>
                       </motion.div>
-
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3 }}
@@ -493,30 +621,50 @@ export default function MedicalAdminsPage() {
                       >
                         <h4 className="text-lg font-semibold text-green-800 mb-4 flex items-center gap-2">
                           <Building className="h-5 w-5" />
-                          Professional Information
+                          Organization Information
                         </h4>
                         <div className="space-y-3">
                           <div className="flex items-center gap-3">
                             <Building className="h-4 w-4 text-green-600" />
                             <div>
-                              <p className="font-medium text-gray-900">{selectedAdmin.clinic}</p>
-                              <p className="text-sm text-gray-600">Healthcare Facility</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <Shield className="h-4 w-4 text-green-600" />
-                            <div>
-                              <p className="font-medium text-gray-900">{selectedAdmin.experience}</p>
-                              <p className="text-sm text-gray-600">Experience</p>
+                              <p className="font-medium text-gray-900">
+                                {selectedAdmin.storeName ||
+                                  selectedAdmin.companyName}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                {selectedAdmin.userType === "Chemist"
+                                  ? "Pharmacy"
+                                  : "Company"}
+                              </p>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
                             <Calendar className="h-4 w-4 text-green-600" />
                             <div>
-                              <p className="font-medium text-gray-900">{selectedAdmin.joinDate}</p>
+                              <p className="font-medium text-gray-900">
+                                {selectedAdmin.joinDate}
+                              </p>
                               <p className="text-sm text-gray-600">Join Date</p>
                             </div>
                           </div>
+                          {selectedAdmin.productCategories &&
+                            selectedAdmin.productCategories.length > 0 && (
+                              <div className="flex items-start gap-3">
+                                <Plus className="h-4 w-4 text-green-600 mt-1" />
+                                <div>
+                                  <p className="font-medium text-gray-900">
+                                    Product Categories:
+                                  </p>
+                                  <ul className="text-sm text-gray-600 list-disc list-inside">
+                                    {selectedAdmin.productCategories.map(
+                                      (cat, idx) => (
+                                        <li key={idx}>{cat}</li>
+                                      )
+                                    )}
+                                  </ul>
+                                </div>
+                              </div>
+                            )}
                         </div>
                       </motion.div>
                     </div>
@@ -524,24 +672,30 @@ export default function MedicalAdminsPage() {
                     {/* Right Column */}
                     <div className="space-y-6">
                       {/* Only show license info if not rejected */}
-                      {selectedAdmin.status !== 'Rejected' && (
+                      {selectedAdmin.status !== "Rejected" && (
                         <>
-                          <motion.div 
+                          <motion.div
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.4 }}
                             className={`p-6 rounded-xl border ${
-                              isLicenseExpiring(selectedAdmin.expiry) 
-                                ? 'bg-gradient-to-br from-red-50 to-orange-50 border-red-200' 
-                                : 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200'
+                              isLicenseExpiring(selectedAdmin.licenseExpiry)
+                                ? "bg-gradient-to-br from-red-50 to-orange-50 border-red-200"
+                                : "bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200"
                             }`}
                           >
-                            <h4 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
-                              isLicenseExpiring(selectedAdmin.expiry) ? 'text-red-800' : 'text-purple-800'
-                            }`}>
+                            <h4
+                              className={`text-lg font-semibold mb-4 flex items-center gap-2 ${
+                                isLicenseExpiring(selectedAdmin.licenseExpiry)
+                                  ? "text-red-800"
+                                  : "text-purple-800"
+                              }`}
+                            >
                               <FileText className="h-5 w-5" />
                               License Information
-                              {isLicenseExpiring(selectedAdmin.expiry) && (
+                              {isLicenseExpiring(
+                                selectedAdmin.licenseExpiry
+                              ) && (
                                 <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">
                                   Expires Soon
                                 </span>
@@ -549,31 +703,58 @@ export default function MedicalAdminsPage() {
                             </h4>
                             <div className="space-y-3">
                               <div className="flex items-center gap-3">
-                                <FileText className={`h-4 w-4 ${
-                                  isLicenseExpiring(selectedAdmin.expiry) ? 'text-red-600' : 'text-purple-600'
-                                }`} />
+                                <FileText
+                                  className={`h-4 w-4 ${
+                                    isLicenseExpiring(
+                                      selectedAdmin.licenseExpiry
+                                    )
+                                      ? "text-red-600"
+                                      : "text-purple-600"
+                                  }`}
+                                />
                                 <div>
-                                  <p className="font-medium text-gray-900">{selectedAdmin.licenseNo}</p>
-                                  <p className="text-sm text-gray-600">License Number</p>
+                                  <p className="font-medium text-gray-900">
+                                    {selectedAdmin.licenseNumber}
+                                  </p>
+                                  <p className="text-sm text-gray-600">
+                                    License Number
+                                  </p>
                                 </div>
                               </div>
                               <div className="flex items-center gap-3">
-                                <Calendar className={`h-4 w-4 ${
-                                  isLicenseExpiring(selectedAdmin.expiry) ? 'text-red-600' : 'text-purple-600'
-                                }`} />
+                                <Calendar
+                                  className={`h-4 w-4 ${
+                                    isLicenseExpiring(
+                                      selectedAdmin.licenseExpiry
+                                    )
+                                      ? "text-red-600"
+                                      : "text-purple-600"
+                                  }`}
+                                />
                                 <div>
-                                  <p className={`font-medium ${
-                                    isLicenseExpiring(selectedAdmin.expiry) ? 'text-red-900' : 'text-gray-900'
-                                  }`}>
-                                    {selectedAdmin.expiry}
+                                  <p
+                                    className={`font-medium ${
+                                      isLicenseExpiring(
+                                        selectedAdmin.licenseExpiry
+                                      )
+                                        ? "text-red-900"
+                                        : "text-gray-900"
+                                    }`}
+                                  >
+                                    {selectedAdmin.licenseExpiry
+                                      ? new Date(
+                                          selectedAdmin.licenseExpiry
+                                        ).toLocaleDateString()
+                                      : "N/A"}
                                   </p>
-                                  <p className="text-sm text-gray-600">Expiry Date</p>
+                                  <p className="text-sm text-gray-600">
+                                    Expiry Date
+                                  </p>
                                 </div>
                               </div>
                             </div>
                           </motion.div>
-
-                          <motion.div 
+                          <motion.div
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.5 }}
@@ -587,21 +768,28 @@ export default function MedicalAdminsPage() {
                               <div className="flex items-center gap-3">
                                 <CreditCard className="h-4 w-4 text-amber-600" />
                                 <div>
-                                  <p className="font-medium text-gray-900">{selectedAdmin.panNo}</p>
-                                  <p className="text-sm text-gray-600">PAN Number</p>
+                                  <p className="font-medium text-gray-900">
+                                    {selectedAdmin.panNumber || "N/A"}
+                                  </p>
+                                  <p className="text-sm text-gray-600">
+                                    PAN Number
+                                  </p>
                                 </div>
                               </div>
                               <div className="flex items-center gap-3">
                                 <CreditCard className="h-4 w-4 text-amber-600" />
                                 <div>
-                                  <p className="font-medium text-gray-900">{selectedAdmin.gstNo}</p>
-                                  <p className="text-sm text-gray-600">GST Number</p>
+                                  <p className="font-medium text-gray-900">
+                                    {selectedAdmin.gstNumber || "N/A"}
+                                  </p>
+                                  <p className="text-sm text-gray-600">
+                                    GST Number
+                                  </p>
                                 </div>
                               </div>
                             </div>
                           </motion.div>
-
-                          <motion.div 
+                          <motion.div
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.6 }}
@@ -615,8 +803,14 @@ export default function MedicalAdminsPage() {
                               <motion.button
                                 whileHover={{ scale: 1.03 }}
                                 whileTap={{ scale: 0.98 }}
-                                onClick={() => window.open(selectedAdmin.licenseFile, '_blank')}
+                                onClick={() =>
+                                  window.open(
+                                    selectedAdmin.licenseFileUrl,
+                                    "_blank"
+                                  )
+                                }
                                 className="flex-1 inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200"
+                                disabled={!selectedAdmin.licenseFileUrl}
                               >
                                 <Eye className="mr-2" size={16} />
                                 View Document
@@ -624,8 +818,11 @@ export default function MedicalAdminsPage() {
                               <motion.button
                                 whileHover={{ scale: 1.03 }}
                                 whileTap={{ scale: 0.98 }}
-                                onClick={() => downloadLicense(selectedAdmin.licenseFile)}
+                                onClick={() =>
+                                  downloadLicense(selectedAdmin.licenseFileUrl)
+                                }
                                 className="flex-1 inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200"
+                                disabled={!selectedAdmin.licenseFileUrl}
                               >
                                 <Download className="mr-2" size={16} />
                                 Download
@@ -637,23 +834,35 @@ export default function MedicalAdminsPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Modal footer - Only show if not rejected */}
-                {selectedAdmin.status !== 'Rejected' && (
+                {selectedAdmin.status !== "Rejected" && (
                   <div className="sticky bottom-0 bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-t flex justify-between items-center">
                     <div className="text-sm text-gray-600">
-                      Admin ID: {selectedAdmin.id} • Last updated: {selectedAdmin.lastLogin}
+                      User ID: {selectedAdmin._id} • Registered:{" "}
+                      {selectedAdmin.joinDate}
                     </div>
                     <div className="flex gap-3">
-                      <motion.button
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => downloadLicense(selectedAdmin.licenseFile)}
-                        className="px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 flex items-center gap-2"
-                      >
-                        <Download size={16} />
-                        Download License
-                      </motion.button>
+                      {selectedAdmin.status === "Pending" && (
+                        <>
+                          <motion.button
+                            whileHover={{ scale: 1.03 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => handleApprove(selectedAdmin)}
+                            className="px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 flex items-center gap-2"
+                          >
+                            <CheckCircle size={16} />
+                          </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.03 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => handleRejectClick(selectedAdmin)}
+                            className="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-200 flex items-center gap-2"
+                          >
+                            <UserX size={16} />
+                          </motion.button>
+                        </>
+                      )}
                       <motion.button
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.98 }}
@@ -681,7 +890,6 @@ export default function MedicalAdminsPage() {
                 variants={backdropVariants}
                 className="absolute inset-0 bg-black/50 backdrop-blur-sm"
               ></motion.div>
-              
               <motion.div
                 initial="hidden"
                 animate="visible"
@@ -689,9 +897,15 @@ export default function MedicalAdminsPage() {
                 variants={modalVariants}
                 className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6"
               >
-                <h3 className="text-xl font-bold text-red-800 mb-4">Reject Admin Application</h3>
+                <h3 className="text-xl font-bold text-red-800 mb-4">
+                  Reject User Application
+                </h3>{" "}
+                {/* Changed title */}
                 <div className="mb-4">
-                  <label htmlFor="rejectionReason" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="rejectionReason"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Reason for Rejection
                   </label>
                   <textarea
@@ -700,7 +914,7 @@ export default function MedicalAdminsPage() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                     value={rejectionReason}
                     onChange={(e) => setRejectionReason(e.target.value)}
-                    placeholder="Enter the reason for rejecting this admin..."
+                    placeholder="Enter the reason for rejecting this user..."
                   />
                 </div>
                 <div className="flex justify-end gap-3">
@@ -718,9 +932,9 @@ export default function MedicalAdminsPage() {
                     onClick={confirmRejection}
                     disabled={!rejectionReason}
                     className={`px-4 py-2 text-white rounded-lg transition-all duration-200 ${
-                      rejectionReason 
-                        ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800'
-                        : 'bg-gray-400 cursor-not-allowed'
+                      rejectionReason
+                        ? "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
+                        : "bg-gray-400 cursor-not-allowed"
                     }`}
                   >
                     Confirm Rejection
@@ -744,7 +958,10 @@ export default function MedicalAdminsPage() {
               >
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5" />
-                  <span className="font-semibold">Admin approved successfully!</span>
+                  <span className="font-semibold">
+                    User approved successfully!
+                  </span>{" "}
+                  {/* Changed text */}
                 </div>
               </motion.div>
             </div>
