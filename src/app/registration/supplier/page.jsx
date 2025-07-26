@@ -738,9 +738,9 @@ export default function SupplierRegistration() {
 
         <div className="relative z-10 flex flex-col items-center justify-center px-10 text-center">
           <img
-            src="/placeholder.svg?height=300&width=300"
+            src="/supplierRegistration.jpg"
             alt="Supplier Registration"
-            className="w-full max-w-sm mb-6 animate-pulse"
+            className="w-full max-w-sm mb-6 "
           />
           <h3 className="text-2xl font-bold text-white mb-4">Join Our Network</h3>
           <p className="text-green-100 text-base mb-6">

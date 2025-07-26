@@ -795,9 +795,9 @@ export default function ChemistRegistration() {
 
         <div className="relative z-10 flex flex-col items-center justify-center px-10 text-center">
           <img
-            src="/placeholder.svg?height=300&width=300"
+            src="/chemisRegistraion.jpeg"
             alt="Healthcare Registration"
-            className="w-full max-w-sm mb-6 animate-pulse"
+            className="w-full max-w-sm mb-6 "
           />
           <h3 className="text-2xl font-bold text-white mb-4">
             Join Our Network
