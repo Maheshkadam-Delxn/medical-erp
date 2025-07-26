@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import  connectDB  from "@/lib/dbConnect"
-import Chemist from "@/models/Chemist"
+import Chemist from "@/models/chemist"
 import mongoose from "mongoose" // Import mongoose to use isValidObjectId
 
 export async function PATCH(req, { params }) {
