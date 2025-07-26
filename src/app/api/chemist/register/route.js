@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import connectDB from "@/lib/dbConnect";
-import Chemist from "@/models/Chemist.js";
+import Chemist from "@/models/Chemist"
 
 // Helper function to trim and clean form data
 const cleanFormData = (formData) => {

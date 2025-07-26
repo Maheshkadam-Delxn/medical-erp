@@ -1,4 +1,4 @@
-import Chemist from "@/models/Chemist.js";
+import Chemist from "@/models/Chemist"
 
 // app/api/chemists/[id]/route.js
 export async function GET(req, { params }) {
