@@ -349,14 +349,14 @@ export default function MedicalAdminsPage() {
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-green-800 uppercase tracking-wider">
                     Type
-                  </th>{" "}
+                  </th>
                   {/* Added User Type */}
                   <th className="px-6 py-4 text-left text-xs font-semibold text-green-800 uppercase tracking-wider">
                     Contact No
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-green-800 uppercase tracking-wider">
                     Organization
-                  </th>{" "}
+                  </th>
                   {/* Changed from Clinic/Hospital */}
                   <th className="px-6 py-4 text-left text-xs font-semibold text-green-800 uppercase tracking-wider">
                     Status
