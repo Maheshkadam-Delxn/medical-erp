@@ -130,6 +130,13 @@ export default function Header({ role = "admin", onMenuClick, isCollapsed }) {
 
   // Role-specific configurations
   const roleConfig = {
+    superadmin: {
+      title: "SuperAdmin Dashboard",
+      subtitle: "System Management",
+      gradient: "from-green-500 to-green-600",
+      bgColor: "bg-gradient-to-r from-green-500 to-green-600",
+      permissions: ["full_access", "user_management", "system_settings"],
+    },
     admin: {
       title: "Admin Dashboard",
       subtitle: "System Management",

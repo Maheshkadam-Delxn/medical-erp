@@ -80,7 +80,7 @@ export default function SuperAdminDashboardPage() {
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-green-500 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        {/* <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-green-500 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-green-800">Super Admin Dashboard</h1>
             <p className="text-green-600 text-sm">Manage users, approvals, and system oversight</p>
@@ -93,7 +93,7 @@ export default function SuperAdminDashboardPage() {
               <Plus size={20} /> Add Supplier
             </button>
           </div>
-        </div>
+        </div> */}
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((stat, i) => {
