@@ -1686,7 +1686,7 @@ export default function MultiUserLogin() {
             <div className="space-y-3">
               <Link
                 href={userTypes.chemist.registerPath}
-                className="block py-3 px-4 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg transition-colors duration-200 flex items-center space-x-3"
+                className=" py-3 px-4 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg transition-colors duration-200 flex items-center space-x-3"
                 onClick={() => setShowGetStartedOptions(false)}
               >
                 <div className="p-2 rounded-lg bg-green-100 text-green-600">
@@ -1696,7 +1696,7 @@ export default function MultiUserLogin() {
               </Link>
               <Link
                 href={userTypes.supplier.registerPath}
-                className="block py-3 px-4 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg transition-colors duration-200 flex items-center space-x-3"
+                className=" py-3 px-4 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg transition-colors duration-200 flex items-center space-x-3"
                 onClick={() => setShowGetStartedOptions(false)}
               >
                 <div className="p-2 rounded-lg bg-green-100 text-green-600">
