@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import dbConnect from "@/lib/dbConnect"
-import Chemist from "@/models/Chemist"
+import Chemist from "@/models/chemist"
 import Supplier from "@/models/Supplier"
 
 export async function GET(request, { params }) {

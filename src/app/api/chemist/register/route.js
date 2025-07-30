@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import connectDB from "@/lib/dbConnect"
-import Chemist from "@/models/Chemist";
+import Chemist from "@/models/chemist";
 import cloudinary from "@/lib/cloudinary"
 
 // Helper to clean string fields
