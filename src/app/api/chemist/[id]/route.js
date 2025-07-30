@@ -1,4 +1,4 @@
-import Chemist from "@/models/chemist" // Capitalize the model
+import Chemist from "@/models/Chemist";
 import { NextResponse } from "next/server";
 // import dbConnect from "@/lib/dbConnect"; // Always ensure DB connection
 // app/api/chemists/[id]/route.js

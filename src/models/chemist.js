@@ -1,5 +1,24 @@
 import mongoose from "mongoose"
 
+const documentSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      enum: ["Drug License", "GST Certificate"],
+    },
+    url: {
+      type: String,
+      required: true,
+    },
+    uploadedAt: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  { _id: false },
+)
+
 const chemistSchema = new mongoose.Schema(
   {
     name: {
@@ -90,10 +109,6 @@ const chemistSchema = new mongoose.Schema(
         message: "License expiry date must be in the future",
       },
     },
-    licenseFileUrl: {
-      type: String,
-      required: [true, "License file is required"],
-    },
     gstNumber: {
       type: String,
       required: [true, "GST number is required"],
@@ -101,22 +116,35 @@ const chemistSchema = new mongoose.Schema(
       uppercase: true,
       match: [/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9]{1}[Z]{1}[0-9A-Z]{1}$/, "Invalid GST format"],
     },
-    gstFileUrl: {
+    registrationId: {
       type: String,
-      required: [true, "GST file is required"],
+      unique: true,
+      required: true,
+      default: () => {
+        const prefix = "CHEM"
+        const timestamp = Date.now().toString().slice(-6)
+        const random = Math.floor(100 + Math.random() * 900)
+        return `${prefix}${timestamp}${random}`
+      },
+      validate: {
+        validator: (v) => /^CHEM\d{6}\d{3}$/.test(v),
+        message: (props) => `${props.value} is not a valid Chemist ID!`,
+      },
     },
-    // registrationId: {
-    //   type: String,
-    //   unique: true,
-    //   required: true,
-    // },
+    documents: {
+      type: [documentSchema],
+      validate: {
+        validator: (v) => v.length === 2,
+        message: "Two documents are required (Drug License & GST Certificate)",
+      },
+    },
     isApproved: {
       type: Boolean,
       default: false,
     },
     approvedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Admin",
+      ref: "SuperAdmin",
       default: null,
     },
     approvedAt: {
@@ -127,29 +155,62 @@ const chemistSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    isBlocked: {
+    type: Boolean,
+    default: false,
+    index: true // For faster querying
   },
-  {
-    timestamps: true,
+  blockedAt: {
+    type: Date,
+    default: null
   },
+  unblockedAt: {
+    type: Date,
+    default: null
+  },
+  blockReason: {
+    type: String,
+    default: null,
+    trim: true
+  },
+  blockedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'SuperAdmin',
+    default: null
+  }
+  },
+  { timestamps: true },
 )
 
 // Hash password before saving
 chemistSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next()
 
-  const bcrypt = require("bcryptjs")
-  this.password = await bcrypt.hash(this.password, 12)
-  next()
+  try {
+    const bcrypt = await import("bcryptjs")
+    this.password = await bcrypt.hash(this.password, 12)
+    next()
+  } catch (err) {
+    next(err)
+  }
 })
 
-// Create indexes for better performance
-// chemistSchema.index({ email: 1 })
-// chemistSchema.index({ phone: 1 })
-// chemistSchema.index({ aadharNumber: 1 })
-// chemistSchema.index({ panNumber: 1 })
-// chemistSchema.index({ licenseNumber: 1 })
-// chemistSchema.index({ gstNumber: 1 })
-// chemistSchema.index({ registrationId: 1 })
-// chemistSchema.index({ isApproved: 1 })
+// Remove sensitive data from responses
+chemistSchema.methods.toJSON = function () {
+  const obj = this.toObject()
+  delete obj.password
+  obj.id = obj._id
+  delete obj._id
+  delete obj.__v
+  return obj
+}
+
+// Create text index for search functionality
+chemistSchema.index({
+  storeName: "text",
+  name: "text",
+  email: "text",
+  licenseNumber: "text",
+})
 
 export default mongoose.models.Chemist || mongoose.model("Chemist", chemistSchema)

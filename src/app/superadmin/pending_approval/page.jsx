@@ -62,8 +62,10 @@ export default function PendingApprovalsPage() {
       if (!suppliersRes.ok)
         throw new Error(suppliersData.error || "Failed to fetch suppliers");
 
-      const chemists = (chemistsData.data || []).map((chem) => ({
-        _id: chem._id,
+      console.log(chemistsData);
+      
+      const chemists = (chemistsData || []).map((chem) => ({
+        _id: chem.id,
         userType: "Chemist",
         name: chem.name,
         email: chem.email,
@@ -85,8 +87,8 @@ export default function PendingApprovalsPage() {
         gstNumber: chem.gstNumber,
       }));
 
-      const suppliers = (suppliersData.data || []).map((supp) => ({
-        _id: supp._id,
+      const suppliers = (suppliersData || []).map((supp) => ({
+        _id: supp.id,
         userType: "Supplier",
         name: supp.contactPerson, // Use contactPerson as the main name for display
         email: supp.email,
@@ -115,6 +117,9 @@ export default function PendingApprovalsPage() {
       }));
 
       setPendingApprovals([...chemists, ...suppliers]);
+
+      
+      
     } catch (error) {
       console.error("Error fetching registrations:", error);
       setFetchError(error.message);
@@ -127,6 +132,8 @@ export default function PendingApprovalsPage() {
     fetchAllPendingApprovals();
   }, []);
 
+  console.log("Pending ", pendingApprovals);
+  
   // Filter users based on selected filter
   const filteredUsers = useMemo(() => {
     return filter === "all"
@@ -136,6 +143,9 @@ export default function PendingApprovalsPage() {
         );
   }, [pendingApprovals, filter]);
 
+console.log("filter",filteredUsers);
+
+  
   // Calculate stats based on actual data
   const stats = useMemo(() => {
     return [
@@ -260,7 +270,7 @@ export default function PendingApprovalsPage() {
   const handleApprove = async (user) => {
     setLoading(true);
     try {
-      const apiUrl = `/api/${user.userType.toLowerCase()}/${
+      const apiUrl = `/api/superadmin/${user.userType.toLowerCase()}/${
         user._id
       }/approve-reject`;
       const response = await fetch(apiUrl, {
@@ -298,7 +308,7 @@ export default function PendingApprovalsPage() {
 
     setLoading(true);
     try {
-      const apiUrl = `/api/${userToReject.userType.toLowerCase()}/${
+      const apiUrl = `/api/superadmin/${userToReject.userType.toLowerCase()}/${
         userToReject._id
       }/approve-reject`;
       const response = await fetch(apiUrl, {
@@ -431,6 +441,7 @@ export default function PendingApprovalsPage() {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {filteredUsers.map((user) => (
+                  console.log("Rendering user with ID:", user._id, "User:", user),
                   <tr
                     key={user._id}
                     className="hover:bg-green-50 transition-colors duration-150"
@@ -514,7 +525,7 @@ export default function PendingApprovalsPage() {
                               title="Approve"
                             >
                               <CheckCircle size={16} />
-                              Approve
+                              
                             </motion.button>
                             <motion.button
                               whileHover={{ scale: 1.05 }}
@@ -524,7 +535,7 @@ export default function PendingApprovalsPage() {
                               title="Reject"
                             >
                               <UserX size={16} />
-                              Reject
+                              
                             </motion.button>
                           </>
                         )}

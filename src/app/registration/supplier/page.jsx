@@ -20,6 +20,7 @@ import {
   MapIcon,
   BadgeIcon as IdCard,
   Calendar,
+  LogIn,
 } from "lucide-react"
 
 const steps = [
@@ -29,23 +30,23 @@ const steps = [
 ]
 
 const supplierTypes = [
-  "Pharmaceutical Manufacturer",
-  "Medical Equipment Supplier",
-  "Wholesale Distributor",
-  "Generic Medicine Supplier",
-  "Surgical Equipment Supplier",
-  "Ayurvedic Product Supplier",
+  "PHARMACEUTICAL_MANUFACTURER",
+  "MEDICAL_EQUIPMENT_SUPPLIER",
+  "WHOLESALE_DISTRIBUTOR",
+  "GENERIC_MEDICINE_SUPPLIER",
+  "SURGICAL_EQUIPMENT_SUPPLIER",
+  "AYURVEDIC_PRODUCT_SUPPLIER",
 ]
 
 const productCategories = [
-  "Prescription Medicines",
-  "Over-the-Counter Drugs",
-  "Medical Devices",
-  "Surgical Instruments",
-  "Laboratory Equipment",
-  "Ayurvedic Products",
-  "Homeopathic Medicines",
-  "Veterinary Medicines",
+  "PRESCRIPTION_MEDICINES",
+  "OVER_THE_COUNTER_DRUGS",
+  "MEDICAL_DEVICES",
+  "SURGICAL_INSTRUMENTS",
+  "LABORATORY_EQUIPMENT",
+  "AYURVEDIC_PRODUCTS",
+  "HOMEOPATHIC_MEDICINES",
+  "VETERINARY_MEDICINES",
 ]
 
 function InputField({ icon, name, placeholder, value, onChange, type = "text", error, maxLength }) {
@@ -145,7 +146,10 @@ export default function SupplierRegistration() {
     const validTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"]
 
     if (file && !validTypes.includes(file.type)) {
-      setErrors({ ...errors, [type]: "Invalid file type. Only PDF, JPG, PNG allowed." })
+      setErrors({
+        ...errors,
+        [type]: "Invalid file type. Only PDF, JPG, PNG allowed.",
+      })
       if (type === "licenseFile") {
         setLicenseFile(null)
         setLicensePreview(null)
@@ -199,17 +203,13 @@ export default function SupplierRegistration() {
     // Personal information validation
     if (step === 0) {
       if (!form.contactPerson.trim()) newErrors.contactPerson = "Contact person name is required"
-
       if (!form.email.trim()) newErrors.email = "Email is required"
       else if (!/^\S+@\S+\.\S+$/.test(form.email)) newErrors.email = "Invalid email format"
-
       if (!form.phone.trim()) newErrors.phone = "Phone is required"
       else if (!/^[0-9]{10}$/.test(form.phone)) newErrors.phone = "Invalid phone number (10 digits)"
-
       if (!form.password.trim()) newErrors.password = "Password is required"
       else if (form.password.length < 8) newErrors.password = "Password must be at least 8 characters"
     }
-
     // Company information validation
     else if (step === 1) {
       if (!form.companyName.trim()) newErrors.companyName = "Company name is required"
@@ -221,25 +221,20 @@ export default function SupplierRegistration() {
       else if (!/^[0-9]{6}$/.test(form.pincode)) newErrors.pincode = "Invalid pincode (6 digits)"
       if (form.productCategories.length === 0) newErrors.productCategories = "Select at least one product category"
     }
-
     // Legal information validation
     else if (step === 2) {
       if (!form.drugLicenseNumber.trim()) newErrors.drugLicenseNumber = "Drug license number is required"
-
       if (!form.licenseExpiry.trim()) newErrors.licenseExpiry = "License expiry date is required"
       else {
         const expiryDate = new Date(form.licenseExpiry)
         const today = new Date()
         if (expiryDate <= today) newErrors.licenseExpiry = "License expiry date must be in the future"
       }
-
       if (!licenseFile) newErrors.licenseFile = "License copy is required"
-
       if (!form.gstNumber.trim()) newErrors.gstNumber = "GST number is required"
       else if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9]{1}[Z]{1}[0-9A-Z]{1}$/.test(form.gstNumber)) {
         newErrors.gstNumber = "Invalid GST format (e.g., 27ABCDE1234F1Z5)"
       }
-
       if (!gstFile) newErrors.gstFile = "GST copy is required"
     }
 
@@ -296,12 +291,14 @@ export default function SupplierRegistration() {
       })
 
       const result = await response.json()
-      console.log(result)
 
       if (!response.ok) {
         throw new Error(result.error || "Registration failed")
       }
 
+      if (result.data?.registrationId) {
+        setUserId(result.data.registrationId)
+      }
 
       setIsSubmitted(true)
       setCompletedSteps([...completedSteps, step])
@@ -357,15 +354,31 @@ export default function SupplierRegistration() {
               <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-green-800 mb-2">Registration Successful!</h2>
               <p className="text-sm text-green-700 mb-4">Thank you for registering with us!</p>
-              {/* <div className="bg-green-50 p-4 rounded-lg">
+              <div className="bg-green-50 p-4 rounded-lg">
                 <p className="text-sm text-green-700 mb-2">Your Registration ID:</p>
                 <div className="text-green-900 text-lg font-mono font-bold">{userId}</div>
                 <p className="text-xs text-green-600 mt-2">Please save this ID for future reference</p>
-              </div> */}
+              </div>
+              <button
+                onClick={() => (window.location.href = "/auth/login")}
+                className="mt-6 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                disabled={isLoading}
+              >
+                <LogIn className="w-4 h-4 mr-2 inline-block" />
+                Login to Dashboard
+              </button>
+              <p className="text-xs text-gray-500 mt-4">
+                You can now log in to your dashboard to manage your profile and orders.
+              </p>
+              <button
+                onClick={() => (window.location.href = "/")}
+                className="mt-4 px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+                disabled={isLoading}
+              >
+                <ChevronLeft className="w-4 h-4 mr-2 inline-block" />
+                Back to Home
+              </button>
             </div>
-
-
-
           ) : (
             <>
               <h2 className="text-xl font-semibold text-center text-green-800 mb-2">{steps[step].title} Information</h2>
@@ -433,7 +446,6 @@ export default function SupplierRegistration() {
                       onChange={handleChange}
                       error={errors.companyName}
                     />
-
                     <div className="relative">
                       <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-green-400">
                         <Building className="w-4 h-4" />
@@ -449,9 +461,12 @@ export default function SupplierRegistration() {
                         } rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent focus:outline-none text-sm transition-all bg-green-50 hover:bg-white appearance-none`}
                       >
                         <option value="">Select Supplier Type</option>
-                        {supplierTypes.map((type, index) => (
-                          <option key={index} value={type}>
-                            {type}
+                        {supplierTypes.map((type) => (
+                          <option key={type} value={type}>
+                            {type
+                              .toLowerCase()
+                              .replace(/_/g, " ")
+                              .replace(/\b\w/g, (l) => l.toUpperCase())}
                           </option>
                         ))}
                       </select>
@@ -462,7 +477,6 @@ export default function SupplierRegistration() {
                         </p>
                       )}
                     </div>
-
                     <InputField
                       icon={<MapPin className="w-4 h-4 text-green-400" />}
                       name="address"
@@ -501,15 +515,20 @@ export default function SupplierRegistration() {
                     <div className="w-full">
                       <label className="block text-sm font-medium text-gray-700 mb-2">Product Categories</label>
                       <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto">
-                        {productCategories.map((category, index) => (
-                          <label key={index} className="flex items-center space-x-2 text-xs">
+                        {productCategories.map((category) => (
+                          <label key={category} className="flex items-center space-x-2 text-xs">
                             <input
                               type="checkbox"
                               checked={form.productCategories.includes(category)}
                               onChange={() => handleCategoryChange(category)}
                               className="rounded border-gray-300 text-green-600 focus:ring-green-500"
                             />
-                            <span className="text-gray-700">{category}</span>
+                            <span className="text-gray-700">
+                              {category
+                                .toLowerCase()
+                                .replace(/_/g, " ")
+                                .replace(/\b\w/g, (l) => l.toUpperCase())}
+                            </span>
                           </label>
                         ))}
                       </div>
@@ -735,23 +754,33 @@ export default function SupplierRegistration() {
           <div className="absolute bottom-10 left-10 w-40 h-40 bg-green-300 rounded-full blur-3xl"></div>
           <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-green-200 rounded-full blur-2xl"></div>
         </div>
-
         <div className="relative z-10 flex flex-col items-center justify-center px-10 text-center">
           <img
-            src="/supplierRegistration.jpg"
+            src="/placeholder.svg?height=400&width=400"
             alt="Supplier Registration"
-            className="w-full max-w-sm mb-6 "
+            className="w-full max-w-sm mb-6"
           />
           <h3 className="text-2xl font-bold text-white mb-4">Join Our Network</h3>
           <p className="text-green-100 text-base mb-6">
             Connect with thousands of healthcare providers and expand your business
           </p>
-
           <div className="space-y-3">
             {[
-              { icon: CalendarCheck, text: "Efficient order management", color: "bg-teal-400" },
-              { icon: FileBarChart2, text: "Real-time inventory tracking", color: "bg-cyan-400" },
-              { icon: Zap, text: "Fast payment processing", color: "bg-yellow-400" },
+              {
+                icon: CalendarCheck,
+                text: "Efficient order management",
+                color: "bg-teal-400",
+              },
+              {
+                icon: FileBarChart2,
+                text: "Real-time inventory tracking",
+                color: "bg-cyan-400",
+              },
+              {
+                icon: Zap,
+                text: "Fast payment processing",
+                color: "bg-yellow-400",
+              },
             ].map((feature, index) => (
               <div key={index} className="flex items-center space-x-3 p-3 bg-white/20 rounded-xl backdrop-blur-sm">
                 <div className={`p-2 rounded-lg ${feature.color}`}>

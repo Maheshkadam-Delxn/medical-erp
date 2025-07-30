@@ -1,67 +1,81 @@
-import { NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
-import connectDB from "@/lib/dbConnect";
-import Chemist from "@/models/chemist"
+import { NextResponse } from "next/server"
+import connectDB from "@/lib/dbConnect"
+import Chemist from "@/models/Chemist";
+import cloudinary from "@/lib/cloudinary"
 
-// Helper function to trim and clean form data
+// Helper to clean string fields
 const cleanFormData = (formData) => {
-  const data = {};
+  const data = {}
   for (const [key, value] of formData.entries()) {
-    data[key] = typeof value === 'string' ? value.trim() : value;
+    data[key] = typeof value === "string" ? value.trim() : value
   }
-  return data;
-};
+  return data
+}
+
+// Convert file to Base64 for Cloudinary
+const toBase64 = async (file) => {
+  const buffer = Buffer.from(await file.arrayBuffer())
+  return `data:${file.type};base64,${buffer.toString("base64")}`
+}
+
+// Validate file type
+const isValidFileType = (file) => {
+  const validTypes = ["image/jpeg", "image/png", "application/pdf"] // Allow PDF for consistency
+  return validTypes.includes(file.type)
+}
 
 export async function POST(req) {
   try {
-    await connectDB();
-    const formData = await req.formData();
-    
-    // Clean and trim all form data
-    const chemistData = cleanFormData(formData);
-    console.log("Cleaned form data:", chemistData);
-
-    // Validate required fields
+    await connectDB()
+    console.log("monogdb connected...");
+    const formData = await req.formData()
+    const chemistData = cleanFormData(formData)
+    console.log("clean chemistdata", cleanFormData);
+    // Required fields check
     const requiredFields = [
-      'name', 'email', 'phone', 'password',
-      'aadharNumber', 'panNumber', 'storeName',
-      'shoptype', 'address', 'city', 'state',
-      'pincode', 'licenseNumber', 'licenseExpiry',
-      'gstNumber'
-    ];
-
-    const missingFields = requiredFields.filter(field => !chemistData[field]);
-    if (missingFields.length > 0) {
-      return NextResponse.json(
-        { error: `Missing required fields: ${missingFields.join(", ")}` },
-        { status: 400 }
-      );
+      "name",
+      "email",
+      "phone",
+      "password",
+      "aadharNumber",
+      "panNumber",
+      "storeName",
+      "shoptype",
+      "address",
+      "city",
+      "state",
+      "pincode",
+      "licenseNumber",
+      "licenseExpiry",
+      "gstNumber",
+    ]
+    const missing = requiredFields.filter((f) => !chemistData[f])
+    if (missing.length) {
+      return NextResponse.json({ error: `Missing fields: ${missing.join(", ")}` }, { status: 400 })
     }
 
-    // Additional format validation
+    // Format validation
     if (!/^\d{10}$/.test(chemistData.phone)) {
-      return NextResponse.json(
-        { error: "Phone must be exactly 10 digits" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Phone must be 10 digits" }, { status: 400 })
     }
-
     if (!/^\d{12}$/.test(chemistData.aadharNumber)) {
-      return NextResponse.json(
-        { error: "Aadhar must be exactly 12 digits" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Aadhar must be 12 digits" }, { status: 400 })
     }
-
     if (!/^[A-Z]{5}\d{4}[A-Z]{1}$/.test(chemistData.panNumber)) {
-      return NextResponse.json(
-        { error: "PAN must be in AAAAA9999A format" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid PAN format" }, { status: 400 })
+    }
+    if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9]{1}[Z]{1}[0-9A-Z]{1}$/.test(chemistData.gstNumber)) {
+      return NextResponse.json({ error: "Invalid GST format" }, { status: 400 })
     }
 
-    // Check for existing records
+    // Validate license expiry date
+    const expiryDate = new Date(chemistData.licenseExpiry)
+    const today = new Date()
+    if (expiryDate <= today) {
+      return NextResponse.json({ error: "License expiry date must be in the future" }, { status: 400 })
+    }
+
+    // Duplicate check
     const existingChemist = await Chemist.findOne({
       $or: [
         { email: chemistData.email },
@@ -69,139 +83,122 @@ export async function POST(req) {
         { aadharNumber: chemistData.aadharNumber },
         { panNumber: chemistData.panNumber },
         { licenseNumber: chemistData.licenseNumber },
-        { gstNumber: chemistData.gstNumber }
-      ]
-    });
+        { gstNumber: chemistData.gstNumber },
+      ],
+    })
 
     if (existingChemist) {
-      const duplicateField = 
-        existingChemist.email === chemistData.email ? "Email" :
-        existingChemist.phone === chemistData.phone ? "Phone" :
-        existingChemist.aadharNumber === chemistData.aadharNumber ? "Aadhar" :
-        existingChemist.panNumber === chemistData.panNumber ? "PAN" :
-        existingChemist.licenseNumber === chemistData.licenseNumber ? "License" : "GST";
-      
-      return NextResponse.json(
-        { error: `${duplicateField} already registered` },
-        { status: 400 }
-      );
+      let duplicateField = "details"
+      if (existingChemist.email === chemistData.email) duplicateField = "Email"
+      else if (existingChemist.phone === chemistData.phone) duplicateField = "Phone"
+      else if (existingChemist.aadharNumber === chemistData.aadharNumber) duplicateField = "Aadhar Number"
+      else if (existingChemist.panNumber === chemistData.panNumber) duplicateField = "PAN Number"
+      else if (existingChemist.licenseNumber === chemistData.licenseNumber) duplicateField = "License Number"
+      else if (existingChemist.gstNumber === chemistData.gstNumber) duplicateField = "GST Number"
+      return NextResponse.json({ error: `${duplicateField} already registered` }, { status: 400 })
     }
 
-    // Handle file uploads
-    const licenseFile = formData.get("licenseFile");
-    const gstFile = formData.get("gstFile");
+    // Get and validate files
+    const licenseFile = formData.get("licenseFile")
+    const gstFile = formData.get("gstFile")
 
     if (!licenseFile || !gstFile) {
-      return NextResponse.json(
-        { error: "Both license and GST files are required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "License and GST files are required" }, { status: 400 })
     }
 
-    // Create upload directory
-    const uploadsDir = path.join(process.cwd(), "public/uploads/chemist");
-    await mkdir(uploadsDir, { recursive: true });
+    if (!isValidFileType(licenseFile) || !isValidFileType(gstFile)) {
+      return NextResponse.json({ error: "Only JPG, PNG, or PDF files are allowed" }, { status: 400 })
+    }
 
-    // Process license file
-    const licenseBytes = await licenseFile.arrayBuffer();
-    const licenseFilename = `license-${Date.now()}-${licenseFile.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
-    await writeFile(
-      path.join(uploadsDir, licenseFilename),
-      Buffer.from(licenseBytes)
-    );
+    // Upload to Cloudinary
+    const [licenseBase64, gstBase64] = await Promise.all([toBase64(licenseFile), toBase64(gstFile)])
 
-    // Process GST file
-    const gstBytes = await gstFile.arrayBuffer();
-    const gstFilename = `gst-${Date.now()}-${gstFile.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
-    await writeFile(
-      path.join(uploadsDir, gstFilename),
-      Buffer.from(gstBytes)
-    );
+    const [licenseUpload, gstUpload] = await Promise.all([
+      cloudinary.uploader.upload(licenseBase64, {
+        folder: "chemist/licenses",
+        resource_type: "auto",
+      }),
+      cloudinary.uploader.upload(gstBase64, {
+        folder: "chemist/gst",
+        resource_type: "auto",
+      }),
+    ])
 
-    // Create new chemist
+    console.log("Licensefile uploaded..",licenseFile.secure_url);
+    console.log("gst file uploaded..",gstFile.secure_url);
+    // Construct documents array
+    const documents = [
+      {
+        name: "Drug License",
+        url: licenseUpload.secure_url,
+        uploadedAt: new Date(),
+      },
+      {
+        name: "GST Certificate",
+        url: gstUpload.secure_url,
+        uploadedAt: new Date(),
+      },
+    ]
+
+    // Create chemist
     const newChemist = await Chemist.create({
       ...chemistData,
-      licenseFileUrl: `/uploads/chemist/${licenseFilename}`,
-      gstFileUrl: `/uploads/chemist/${gstFilename}`,
-      registrationId: `CHEM${Date.now()}`,
-      isApproved: false
-    });
+      documents,
+      isApproved: false,
+    })
 
-    // Remove sensitive data from response
-    const { password, ...responseData } = newChemist.toObject();
+    console.log(formData);
+    const { password, ...safeData } = newChemist.toObject()
 
     return NextResponse.json(
       {
         success: true,
-        data: responseData,
-        message: "Registration successful. Pending approval."
+        message: "Registration successful. Pending approval.",
+        data: safeData,
       },
-      { status: 201 }
-    );
-
+      { status: 201 },
+    )
   } catch (error) {
-    console.error("Registration error:", error);
+    console.error("Registration error:", error)
 
+    // Handle duplicate key errors from Mongoose
     if (error.code === 11000) {
-      const duplicateField = Object.keys(error.keyPattern)[0];
+      const dupField = Object.keys(error.keyPattern)[0]
+      const fieldName = dupField.split(/(?=[A-Z])/).join(" ") // Converts camelCase to "Camel Case"
       return NextResponse.json(
-        { error: `${duplicateField} already exists` },
-        { status: 400 }
-      );
+        {
+          error: `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} already exists`,
+          field: dupField,
+        },
+        { status: 400 },
+      )
     }
 
+    // Handle Mongoose validation errors
     if (error.name === "ValidationError") {
-      const errors = Object.values(error.errors).map(err => err.message);
-      return NextResponse.json(
-        { error: `Validation failed: ${errors.join(", ")}` },
-        { status: 400 }
-      );
+      const errors = Object.values(error.errors).map((err) => err.message)
+      return NextResponse.json({ error: "Validation failed", details: errors }, { status: 400 })
     }
 
     return NextResponse.json(
-      { 
+      {
         error: "Registration failed",
-        details: process.env.NODE_ENV === "development" ? error.message : null
+        details: process.env.NODE_ENV === "development" ? error.message : undefined,
       },
-      { status: 500 }
-    );
+      { status: 500 },
+    )
   }
 }
 
-export async function GET(req) {
+
+
+export async function GET() {
   try {
     await connectDB();
-
-    const { searchParams } = new URL(req.url);
-    const status = searchParams.get("status");
-    const page = parseInt(searchParams.get("page")) || 1;
-    const limit = parseInt(searchParams.get("limit")) || 10;
-
-    const query = {};
-    if (status === "approved") query.isApproved = true;
-    if (status === "pending") query.isApproved = false;
-
-    const chemists = await Chemist.find(query)
-      .select("-password")
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit);
-
-    const total = await Chemist.countDocuments(query);
-
-    return NextResponse.json({
-      success: true,
-      data: chemists,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit)
-      }
-    });
-
+    const chemists = await Chemist.find().select("-password"); // never return password
+    return NextResponse.json(chemists, { status: 200 });
   } catch (error) {
-    console.error("Fetch error:", error);
+    console.error("Error fetching chemists:", error);
     return NextResponse.json(
       { error: "Failed to fetch chemists" },
       { status: 500 }

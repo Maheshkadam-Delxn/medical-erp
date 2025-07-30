@@ -1,5 +1,24 @@
 import mongoose from "mongoose"
 
+const documentSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      enum: ["Drug License", "GST Certificate"],
+    },
+    url: {
+      type: String,
+      required: true,
+    },
+    uploadedAt: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  { _id: false },
+)
+
 const supplierSchema = new mongoose.Schema(
   {
     contactPerson: {
@@ -34,10 +53,14 @@ const supplierSchema = new mongoose.Schema(
     supplierType: {
       type: String,
       required: [true, "Supplier type is required"],
-      enum: {
-        values: ["MANUFACTURER", "DISTRIBUTOR", "WHOLESALER"], // Confirmed enum values
-        message: "'{VALUE}' is not a valid supplier type",
-      },
+      enum: [
+        "PHARMACEUTICAL_MANUFACTURER",
+        "MEDICAL_EQUIPMENT_SUPPLIER",
+        "WHOLESALE_DISTRIBUTOR",
+        "GENERIC_MEDICINE_SUPPLIER",
+        "SURGICAL_EQUIPMENT_SUPPLIER",
+        "AYURVEDIC_PRODUCT_SUPPLIER",
+      ],
     },
     address: {
       type: String,
@@ -84,45 +107,113 @@ const supplierSchema = new mongoose.Schema(
       {
         type: String,
         required: true,
-        enum: {
-          values: ["MEDICINES", "VACCINES", "EQUIPMENT", "SURGICAL", "DISPOSABLES"], // Confirmed enum values
-          message: "'{VALUE}' is not a valid product category",
-        },
+        enum: [
+          "PRESCRIPTION_MEDICINES",
+          "OVER_THE_COUNTER_DRUGS",
+          "MEDICAL_DEVICES",
+          "SURGICAL_INSTRUMENTS",
+          "LABORATORY_EQUIPMENT",
+          "AYURVEDIC_PRODUCTS",
+          "HOMEOPATHIC_MEDICINES",
+          "VETERINARY_MEDICINES",
+        ],
       },
     ],
-    documents: [
-      {
-        name: String,
-        url: String,
-        uploadedAt: {
-          type: Date,
-          default: Date.now,
-        },
+    registrationId: {
+      type: String,
+      unique: true,
+      required: true,
+      default: () => {
+        const prefix = "SUP"
+        const timestamp = Date.now().toString().slice(-6)
+        const random = Math.floor(100 + Math.random() * 900)
+        return `${prefix}${timestamp}${random}`
       },
-    ],
+      validate: {
+        validator: (v) => /^SUP\d{9}$/.test(v),
+        message: (props) => `${props.value} is not a valid registration ID!`,
+      },
+    },
+    documents: {
+      type: [documentSchema],
+      validate: {
+        validator: (v) => v.length === 2,
+        message: "Two documents are required (Drug License & GST Certificate)",
+      },
+    },
     isApproved: {
       type: Boolean,
       default: false,
     },
+    approvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "SuperAdmin",
+      default: null,
+    },
+    approvedAt: {
+      type: Date,
+      default: null,
+    },
+    rejectionReason: {
+      type: String,
+      default: null,
+    },
+    isBlocked: { // Note: Typo kept consistent with your existing code
+    type: Boolean,
+    default: false,
+    index: true
   },
-  {
-    timestamps: true,
+  blockedAt: {
+    type: Date,
+    default: null
   },
+  unblockedAt: {
+    type: Date,
+    default: null
+  },
+  blockReason: {
+    type: String,
+    default: null,
+    trim: true
+  },
+  blockedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'SuperAdmin',
+    default: null
+  }
+  },
+  { timestamps: true },
 )
 
 // Hash password before saving
 supplierSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next()
-  const bcrypt = require("bcryptjs")
-  this.password = await bcrypt.hash(this.password, 12)
-  next()
+
+  try {
+    const bcrypt = await import("bcryptjs")
+    this.password = await bcrypt.hash(this.password, 12)
+    next()
+  } catch (err) {
+    next(err)
+  }
 })
 
-// Log enum values when the model is defined
-console.log("Supplier model enum values for supplierType:", supplierSchema.path("supplierType").enumValues)
-console.log(
-  "Supplier model enum values for productCategories:",
-  supplierSchema.path("productCategories").caster.enumValues,
-)
+// Remove sensitive data from responses
+supplierSchema.methods.toJSON = function () {
+  const obj = this.toObject()
+  delete obj.password
+  obj.id = obj._id
+  delete obj._id
+  delete obj.__v
+  return obj
+}
+
+// Create text index for search functionality
+supplierSchema.index({
+  companyName: "text",
+  contactPerson: "text",
+  email: "text",
+  drugLicenseNumber: "text",
+})
 
 export default mongoose.models.Supplier || mongoose.model("Supplier", supplierSchema)
