@@ -1,5 +1,5 @@
 import "./globals.css";
-
+import { SessionProvider } from "@/context/SessionContext";
 export const metadata = {
   title: "MediEase ERP",
   description: "Comprehensive pharmacy management solution",
@@ -21,7 +21,7 @@ export default function RootLayout({ children }) {
         suppressHydrationWarning={true}
         className="min-h-screen flex flex-col"
       >
-        {children}
+        <SessionProvider>{children}</SessionProvider>
       </body>
     </html>
   );

@@ -53,6 +53,11 @@ export default function SuperAdminDashboardPage() {
   const [pendingSubFilter, setPendingSubFilter] = useState("all") // New state for sub-filtering pending users
   const [allUsers, setAllUsers] = useState([])
 
+  // Image preview states
+  const [showImagePreview, setShowImagePreview] = useState(false)
+  const [previewImage, setPreviewImage] = useState("")
+  const [previewTitle, setPreviewTitle] = useState("")
+
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
@@ -120,6 +125,7 @@ export default function SuperAdminDashboardPage() {
           createdAt: chem.createdAt,
           updatedAt: chem.updatedAt,
           licenseFileUrl: chem.licenseFileUrl,
+          documents: chem.documents || [], // Assuming documents are part of the user object
         }))
 
         const suppliers = (suppliersData || []).map((supp) => ({
@@ -144,7 +150,8 @@ export default function SuperAdminDashboardPage() {
           blockReason: supp.blockReason,
           createdAt: supp.createdAt,
           updatedAt: supp.updatedAt,
-          licenseFileUrl: supp.documents?.find((doc) => doc.name?.toLowerCase().includes("license"))?.url || null,
+          licenseFileUrl: supp.licenseFileUrl,
+          documents: supp.documents || [], // Assuming documents are part of the user object
         }))
 
         setAllUsers([...chemists, ...suppliers])
@@ -187,6 +194,24 @@ export default function SuperAdminDashboardPage() {
   const closeModal = () => {
     setIsModalOpen(false)
     setSelectedUser(null)
+  }
+
+  const openImagePreview = (imageUrl, title) => {
+    setPreviewImage(imageUrl)
+    setPreviewTitle(title)
+    setShowImagePreview(true)
+  }
+
+  const closeImagePreview = () => {
+    setShowImagePreview(false)
+    setPreviewImage("")
+    setPreviewTitle("")
+  }
+
+  const isImageFile = (url) => {
+    if (!url) return false
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp']
+    return imageExtensions.some(ext => url.toLowerCase().includes(ext))
   }
 
   const handleApprove = async (user) => {
@@ -777,13 +802,72 @@ export default function SuperAdminDashboardPage() {
                         )}
                       </div>
                     </div>
-                    {selectedUser.licenseFileUrl && (
+                    {selectedUser.documents && selectedUser.documents.length > 0 && (
+                      <div className="bg-gradient-to-br from-gray-50 to-slate-50 p-6 rounded-xl border border-gray-200">
+                        <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                          <FileText className="h-5 w-5" />
+                          Documents
+                        </h4>
+                        <div className="space-y-4">
+                          {selectedUser.documents.map((doc, index) => (
+                            <div key={index} className="border border-gray-200 rounded-lg p-4 bg-white">
+                              <div className="flex items-center justify-between mb-3">
+                                <h5 className="font-medium text-gray-900">{doc.name}</h5>
+                                <span className="text-xs text-gray-500">
+                                  {new Date(doc.uploadedAt).toLocaleDateString()}
+                                </span>
+                              </div>
+                              <div className="flex gap-2">
+                                {isImageFile(doc.url) && (
+                                  <button
+                                    onClick={() => openImagePreview(doc.url, doc.name)}
+                                    className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all duration-200 text-sm"
+                                  >
+                                    <Eye className="mr-2" size={14} />
+                                    Preview
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => window.open(doc.url, "_blank")}
+                                  className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 text-sm"
+                                >
+                                  <Eye className="mr-2" size={14} />
+                                  View
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    const link = document.createElement("a")
+                                    link.href = doc.url
+                                    link.download = doc.url.split("/").pop()
+                                    link.click()
+                                  }}
+                                  className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 text-sm"
+                                >
+                                  <Download className="mr-2" size={14} />
+                                  Download
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {selectedUser.licenseFileUrl && !selectedUser.documents && (
                       <div className="bg-gradient-to-br from-gray-50 to-slate-50 p-6 rounded-xl border border-gray-200">
                         <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                           <FileText className="h-5 w-5" />
                           License Document
                         </h4>
                         <div className="flex gap-3">
+                          {isImageFile(selectedUser.licenseFileUrl) && (
+                            <button
+                              onClick={() => openImagePreview(selectedUser.licenseFileUrl, "License Document")}
+                              className="flex-1 inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all duration-200"
+                            >
+                              <Eye className="mr-2" size={16} />
+                              Preview
+                            </button>
+                          )}
                           <button
                             onClick={() => window.open(selectedUser.licenseFileUrl, "_blank")}
                             className="flex-1 inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200"
@@ -809,15 +893,7 @@ export default function SuperAdminDashboardPage() {
                   </div>
                 </div>
               </div>
-              {/* Modal Footer */}
-              <div className="sticky bottom-0 bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-t flex justify-end items-center">
-                <button
-                  onClick={closeModal}
-                  className="px-4 py-2 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-lg hover:from-gray-700 hover:to-gray-800 transition-all duration-200"
-                >
-                  Close
-                </button>
-              </div>
+             
             </motion.div>
           </div>
         )}
@@ -936,6 +1012,51 @@ export default function SuperAdminDashboardPage() {
                   Confirm Block
                 </button>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Image Preview Modal */}
+      <AnimatePresence>
+        {showImagePreview && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/90 backdrop-blur-sm"
+              onClick={closeImagePreview}
+            ></motion.div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden"
+            >
+              <div className="sticky top-0 bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4 flex justify-between items-center z-10">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                    <Eye className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white">{previewTitle}</h3>
+                    <p className="text-green-100 text-sm">
+                      {previewImage.split("/").pop()}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={closeImagePreview}
+                  className="text-white hover:text-gray-200 transition-colors p-2 hover:bg-white/10 rounded-lg"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+              <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+                <img src={previewImage} alt={previewTitle} className="w-full h-full object-contain" />
+              </div>
+              
             </motion.div>
           </div>
         )}

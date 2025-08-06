@@ -1,63 +1,54 @@
-import { NextResponse } from "next/server"
-import { cookies } from "next/headers"
+import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 
-export async function POST(request) {
+export async function POST() {
   try {
-    const cookieStore = await cookies()
+    const cookieStore = cookies();
 
-    // Log the logout attempt
-    console.log("User logout at:", new Date().toISOString())
-
-    // Create the response
-    const response = NextResponse.json(
-      {
-        success: true,
-        message: "Logged out successfully",
-      },
-      { status: 200 },
-    )
-
-    // Clear all authentication cookies
+    // Clear authentication cookies
     const cookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
       path: "/",
-      maxAge: 0, // This expires the cookie immediately
-    }
+      maxAge: 0, // Expire immediately
+    };
 
-    response.cookies.set("authToken", "", cookieOptions)
-    response.cookies.set("refreshToken", "", cookieOptions)
-    response.cookies.set("userRole", "", cookieOptions)
-    response.cookies.set("sessionId", "", cookieOptions)
+    const response = NextResponse.json(
+      {
+        success: true,
+        message: "Logged out successfully",
+      },
+      { status: 200 }
+    );
 
-    return response
+    // Clear the 'token' cookie that is set by the login endpoint
+    response.cookies.set("token", "", cookieOptions);
+
+    return response;
   } catch (error) {
-    console.error("Logout error:", error)
+    console.error("Logout error:", error);
 
-    // Even if there's an error, clear cookies for security
+    // Always attempt to clear cookies
     const response = NextResponse.json(
       {
         success: false,
         error: "Logout failed",
       },
-      { status: 500 },
-    )
+      { status: 500 }
+    );
 
-    // Clear cookies even on error
     const cookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
       path: "/",
       maxAge: 0,
-    }
+    };
 
-    response.cookies.set("authToken", "", cookieOptions)
-    response.cookies.set("refreshToken", "", cookieOptions)
-    response.cookies.set("userRole", "", cookieOptions)
-    response.cookies.set("sessionId", "", cookieOptions)
+    // Clear the 'token' cookie that is set by the login endpoint
+    response.cookies.set("token", "", cookieOptions);
 
-    return response
+    return response;
   }
 }

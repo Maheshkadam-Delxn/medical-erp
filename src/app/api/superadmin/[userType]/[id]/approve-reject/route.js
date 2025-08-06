@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import connectDB from "@/lib/dbConnect"
-import Chemist from "@/models/chemist"
+import Chemist from "@/models/Chemist"
 import Supplier from "@/models/Supplier"
 import mongoose from "mongoose"
 

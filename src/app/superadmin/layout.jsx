@@ -110,21 +110,7 @@ export default function Layout({ children }) {
         <Header role="superadmin" onMenuClick={toggleSidebar} />
         {/* Main Area */}
         <main className="flex-1 overflow-auto p-6 space-y-6">{children}</main>
-        {/* Footer */}
-        <footer className="bg-white/80 backdrop-blur-sm border-t border-gray-200/50 px-6 py-4">
-          <div className="flex flex-col sm:flex-row items-center justify-between text-sm text-gray-600">
-            <div className="flex items-center gap-4">
-              <span>© 2025 MediEase. All rights reserved.</span>
-              <span className="hidden sm:inline">•</span>
-              <span className="hidden sm:inline">Version 2.0.1</span>
-            </div>
-            <div className="flex items-center gap-4 mt-2 sm:mt-0">
-              <button className="hover:text-gray-900 transition-colors">Privacy</button>
-              <button className="hover:text-gray-900 transition-colors">Terms</button>
-              <button className="hover:text-gray-900 transition-colors">Support</button>
-            </div>
-          </div>
-        </footer>
+        
       </div>
     </div>
   )

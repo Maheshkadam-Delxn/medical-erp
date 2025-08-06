@@ -65,7 +65,8 @@ const roleConfig = {
     navItems: [
       { title: "Dashboard", icon: LayoutDashboard, path: "/supplier/dashboard" },
       { title: "Orders", icon: ShoppingCart, path: "/supplier/orders", badge: "7" },
-      { title: "Products", icon: Package, path: "/supplier/products" },
+      { title: "Inventory", icon: Package, path: "/supplier/Inventory" },
+      { title: "Purchase", icon: Package, path: "/supplier/purchase" },
       { title: "Deliveries", icon: Truck, path: "/supplier/deliveries" },
       { title: "Settings", icon: Settings, path: "/supplier/settings" },
     ],
@@ -77,8 +78,7 @@ const roleConfig = {
     navItems: [
       { title: "Dashboard", icon: LayoutDashboard, path: "/superadmin" },
       { title: "Suppliers", icon: ShoppingCart, path: "/superadmin/supplier" },
-      { title: "Medical Admins", icon: Package, path: "/superadmin/medical_admin" },
-      { title: "Pending Approval", icon: ClockFading, path: "/superadmin/pending_approval" },
+      { title: "Medical Admins", icon: Package, path: "/superadmin/medical_admin" }
     ],
   },
 }

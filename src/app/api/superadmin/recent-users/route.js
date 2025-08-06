@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import Chemist from "@/models/chemist"
+import Chemist from "@/models/Chemist"
 import Supplier from "@/models/Supplier"
 import dbConnect from "@/lib/dbConnect" // Ensure dbConnect is imported
 

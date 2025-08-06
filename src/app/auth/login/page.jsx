@@ -4,11 +4,13 @@ import { useState, useEffect, Suspense } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useSession } from "@/context/SessionContext";
 
 // Wrap the component that uses useSearchParams in a Suspense boundary
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { login, loading: sessionLoading } = useSession();
   const [selectedUserType, setSelectedUserType] = useState("chemist");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -106,72 +108,36 @@ function LoginForm() {
     setError("");
 
     try {
-      let endpoint;
-      switch (selectedUserType) {
-        case "chemist":
-          endpoint = "/api/chemist/login";
-          break;
-        case "supplier":
-          endpoint = "/api/supplier/login";
-          break;
-        case "superadmin":
-          endpoint = "/api/login/superadmin";
-          break;
-        default:
-          endpoint = "/api/login/superadmin";
-      }
-
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
+      console.log('Login form submitted:', {
+        email: formData.email,
+        role: selectedUserType
       });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Login failed");
-      }
-
-      localStorage.setItem("authToken", result.token);
-      localStorage.setItem("userRole", result.role);
       
-      if (formData.rememberMe) {
-        localStorage.setItem("rememberMe", "true");
-        localStorage.setItem("savedEmail", formData.email);
-      } else {
-        localStorage.removeItem("rememberMe");
-        localStorage.removeItem("savedEmail");
-      }
-
-      switch (result.role) {
-        case "chemist":
-          router.push("/chemist/dashboard");
-          break;
-        case "supplier":
-          router.push("/supplier/dashboard");
-          break;
-        case "superadmin":
-          router.push("/superadmin");
-          break;
-        default:
-          router.push("/");
-      }
+      await login({
+        email: formData.email,
+        password: formData.password,
+        role: selectedUserType
+      });
+      
+      console.log('Login completed successfully');
+      
     } catch (err) {
-      let errorMessage = err.message || "Login failed. Please try again.";
+      console.error('Login error in form:', err);
       
-      if (err.message.includes("not approved")) {
-        errorMessage = "Your account is pending approval. Please contact support.";
-      } else if (err.message.includes("credentials") || err.message.includes("not found")) {
-        errorMessage = "Invalid user type selected or credentials. Please try again.";
-      } else if (err.message.includes("network")) {
-        errorMessage = "Network error. Please check your connection.";
-      } 
-      
-      setError(errorMessage);
+      // Handle specific error messages
+      if (err.message.includes('Invalid user type selected')) {
+        setError(err.message);
+      } else if (err.message.includes('User not found')) {
+        setError("No account found with this email address. Please check your email or register.");
+      } else if (err.message.includes('Invalid credentials')) {
+        setError("Invalid email or password. Please check your credentials.");
+      } else if (err.message.includes('pending approval')) {
+        setError("Your account is pending approval. Please contact support.");
+      } else if (err.message.includes('blocked')) {
+        setError("Your account has been blocked. Please contact support.");
+      } else {
+        setError(err.message || "Login failed. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -184,10 +150,10 @@ function LoginForm() {
   };
 
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value, type: inputType, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: inputType === "checkbox" ? checked : value,
     }));
 
     if (formErrors[name]) {
@@ -654,6 +620,7 @@ function LoginForm() {
                   src="/login.jpg"
                   alt="Pharmacy Management System"
                   fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-contain"
                   priority
                 />
@@ -770,7 +737,7 @@ function LoginForm() {
 // Main component with Suspense boundary
 export default function MultiUserLogin() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense>
       <LoginForm />
     </Suspense>
   );

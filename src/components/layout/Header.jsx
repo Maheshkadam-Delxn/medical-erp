@@ -2,8 +2,10 @@
 import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { Menu, Bell, User, LogOut, Settings, Shield, Search, HelpCircle, ChevronDown, X, Loader2 } from "lucide-react"
+import { useSession } from "@/context/SessionContext";
 
 export default function Header({ role = "admin", onMenuClick, isCollapsed }) {
+  const { user, loading, logout } = useSession();
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isNotificationOpen, setIsNotificationOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
@@ -178,6 +180,14 @@ export default function Header({ role = "admin", onMenuClick, isCollapsed }) {
     }
   }
 
+  // Helper to get display name
+  const getDisplayName = (user) => {
+    if (!user) return "No Name";
+    if (user.contactPerson && user.contactPerson.trim() !== "") return user.contactPerson;
+    if (user.name && user.name.trim() !== "") return user.name;
+    return "No Name";
+  };
+
   return (
     <>
       <header className={`sticky top-0 z-30 ${currentRole.bgColor} shadow-lg backdrop-blur-sm`}>
@@ -295,8 +305,14 @@ export default function Header({ role = "admin", onMenuClick, isCollapsed }) {
                   <User className="h-4 w-4" />
                 </div>
                 <div className="hidden sm:block text-left">
-                  <p className="text-sm font-medium">{role.charAt(0).toUpperCase() + role.slice(1)}</p>
-                  <p className="text-xs text-white/80">Online</p>
+                  <p className="text-sm font-medium">
+                    {loading
+                      ? "Loading..."
+                      : getDisplayName(user)}
+                  </p>
+                  <p className="text-xs text-white/80">
+                    {user ? user.email : ""}
+                  </p>
                 </div>
                 <ChevronDown className="h-4 w-4 ml-1" />
               </button>
@@ -309,10 +325,14 @@ export default function Header({ role = "admin", onMenuClick, isCollapsed }) {
                         <User className="h-5 w-5 text-white" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {role.charAt(0).toUpperCase() + role.slice(1)} User
+                        <p className="text-base font-bold text-gray-900">
+                          {loading
+                            ? "Loading..."
+                            : getDisplayName(user)}
                         </p>
-                        <p className="text-xs text-gray-500">user@mediease.com</p>
+                        <p className="text-xs text-gray-500">
+                          {user ? user.email : ""}
+                        </p>
                       </div>
                     </div>
                   </div>

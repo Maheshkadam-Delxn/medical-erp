@@ -15,7 +15,8 @@ const createSuperadmin = async () => {
     }
 
     const superadmin = new Superadmin({
-        email: 'superadmin@mediease.com',
+        name: 'Super Admin',
+        email: 'superadmin@gmail.com',
         password: 'superadmin123',
     });
 
