@@ -214,3 +214,4 @@ chemistSchema.index({
 })
 
 export default mongoose.models.Chemist || mongoose.model("Chemist", chemistSchema)
+//testung te
